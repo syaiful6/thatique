@@ -1,0 +1,19 @@
+version: 0.1
+log:
+  level: info
+  fields:
+    environment: test
+http:
+  addr: localhost:8034
+mongodb:
+  uri: mongodb://localhost:27017
+  name: thatiq-db
+redis:
+  addr: localhost:6379
+  pool:
+    maxidle: 16
+    maxactive: 64
+    idletimeout: 300s
+  dialtimeout: 10ms
+  readtimeout: 10ms
+  writetimeout: 10ms
