@@ -12,7 +12,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-
 // Version is a major/minor version pair of the form Major.Minor
 // Major version upgrades indicate structure or type changes
 // Minor version upgrades should be strictly additive

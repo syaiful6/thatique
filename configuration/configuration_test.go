@@ -11,7 +11,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-
 // Hook up gocheck into the "go test" runner
 func Test(t *testing.T) { TestingT(t) }
 
@@ -31,13 +30,13 @@ var configStruct = Configuration{
 	},
 
 	HTTP: struct {
-		Addr string `yaml:"addr,omitempty"`
-		Net string `yaml:"net,omitempty"`
-		Host string `yaml:"host,omitempty"`
-		Prefix string `yaml:"prefix,omitempty"`
-		Secret string `yaml:"secret,omitempty"`
+		Addr         string        `yaml:"addr,omitempty"`
+		Net          string        `yaml:"net,omitempty"`
+		Host         string        `yaml:"host,omitempty"`
+		Prefix       string        `yaml:"prefix,omitempty"`
+		Secret       string        `yaml:"secret,omitempty"`
 		DrainTimeout time.Duration `yaml:"draintimeout,omitempty"`
-		Headers http.Header `yaml:"headers,omitempty"`
+		Headers      http.Header   `yaml:"headers,omitempty"`
 	}{
 		Addr: "localhost",
 		Headers: http.Header{
@@ -46,23 +45,23 @@ var configStruct = Configuration{
 	},
 
 	Redis: struct {
-		Addr string `yaml:"addr,omitempty"`
-		Password string `yaml:"password,omitempty"`
-		DB int `yaml:"db,omitempty"`
+		Addr         string        `yaml:"addr,omitempty"`
+		Password     string        `yaml:"password,omitempty"`
+		DB           int           `yaml:"db,omitempty"`
 		DialTimeout  time.Duration `yaml:"dialtimeout,omitempty"`
 		ReadTimeout  time.Duration `yaml:"readtimeout,omitempty"`
 		WriteTimeout time.Duration `yaml:"writetimeout,omitempty"`
-		MaxIdle int `yaml:"maxidle,omitempty"`
-		MaxActive int `yaml:"maxactive,omitempty"`
-		IdleTimeout time.Duration `yaml:"idletimeout,omitempty"`
+		MaxIdle      int           `yaml:"maxidle,omitempty"`
+		MaxActive    int           `yaml:"maxactive,omitempty"`
+		IdleTimeout  time.Duration `yaml:"idletimeout,omitempty"`
 	}{
-		Addr: "localhost",
+		Addr:     "localhost",
 		Password: "secret",
-		DB: 1,
+		DB:       1,
 	},
 
 	MongoDB: struct {
-		URI string `yaml:"uri,omitempty"`
+		URI  string `yaml:"uri,omitempty"`
 		Name string `yaml:"name,omitempty"`
 	}{
 		URI: "mongodb://localhost:2701",

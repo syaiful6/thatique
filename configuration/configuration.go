@@ -10,7 +10,6 @@ import (
 	"time"
 )
 
-
 type Configuration struct {
 	Version Version `yaml:"version"`
 
@@ -93,7 +92,7 @@ type Configuration struct {
 	} `yaml:"redis,omitempty"`
 
 	MongoDB struct {
-		URI string `yaml:"uri,omitempty"`
+		URI  string `yaml:"uri,omitempty"`
 		Name string `yaml:"name,omitempty"`
 	} `yaml:"mongodb"`
 }
@@ -120,7 +119,7 @@ type Mail struct {
 	SMTP struct {
 		// Addr defines smtp host address
 		Addr string `yaml:addr,omitempty`
-		
+
 		// Username defines user name to smtp host
 		Username string `yaml:"username,omitempty"`
 

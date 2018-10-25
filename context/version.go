@@ -2,7 +2,6 @@ package context
 
 import "context"
 
-
 type versionKey struct{}
 
 func (versionKey) String() string { return "version" }

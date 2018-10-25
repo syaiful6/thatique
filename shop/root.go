@@ -6,7 +6,6 @@ import (
 	"github.com/syaiful6/thatique/version"
 )
 
-
 var showVersion bool
 
 func init() {

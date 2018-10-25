@@ -7,9 +7,9 @@ import (
 )
 
 type MongoConn struct {
-	DBName string
+	DBName  string
 	Session *mgo.Session
-	DB *mgo.Database // default db
+	DB      *mgo.Database // default db
 }
 
 // Session
@@ -20,9 +20,9 @@ func Dial(uri string, db string) (*MongoConn, error) {
 	}
 
 	conn := &MongoConn{
-		DBName: db,
+		DBName:  db,
 		Session: session,
-		DB: session.DB(db),
+		DB:      session.DB(db),
 	}
 
 	return conn, err
@@ -41,6 +41,6 @@ func (conn *MongoConn) WithContext(ctx context.Context, f func(*mgo.Database) er
 		<-c // Wait for f to return
 		return ctx.Err()
 	case err := <-c:
-		return err 
+		return err
 	}
 }

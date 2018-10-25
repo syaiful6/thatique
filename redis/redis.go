@@ -7,7 +7,6 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
-
 // Dial connect to redis server, do AUTH if passed non empty password
 func Dial(network, address, password string) (redis.Conn, error) {
 	c, err := redis.Dial(network, address)
@@ -32,7 +31,7 @@ func DialWithDB(network, address, password string, db int) (redis.Conn, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if _, err := c.Do("SELECT", strconv.Itoa(db)); err != nil {
 		c.Close()
 		return nil, err

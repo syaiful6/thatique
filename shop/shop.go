@@ -9,10 +9,10 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/spf13/cobra"
-	log "github.com/sirupsen/logrus"
 	"github.com/gomodule/redigo/redis"
 	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 
 	"github.com/syaiful6/thatique/configuration"
 	scontext "github.com/syaiful6/thatique/context"
@@ -20,7 +20,6 @@ import (
 	"github.com/syaiful6/thatique/shop/listener"
 	"github.com/syaiful6/thatique/version"
 )
-
 
 // this channel gets notified when process receives signal. It is global to ease unit testing
 var quit = make(chan os.Signal, 1)
@@ -55,7 +54,7 @@ var ServeCmd = &cobra.Command{
 type Shop struct {
 	config *configuration.Configuration
 	server *http.Server
-	Redis *redis.Pool
+	Redis  *redis.Pool
 }
 
 func NewShop(ctx context.Context, config *configuration.Configuration) (*Shop, error) {
@@ -66,7 +65,7 @@ func NewShop(ctx context.Context, config *configuration.Configuration) (*Shop, e
 
 	router := mux.NewRouter()
 	router.HandleFunc("/", HomeHandler)
-	
+
 	server := &http.Server{
 		Handler: router,
 	}
@@ -74,7 +73,7 @@ func NewShop(ctx context.Context, config *configuration.Configuration) (*Shop, e
 	return &Shop{
 		config: config,
 		server: server,
-		Redis: redis,
+		Redis:  redis,
 	}, nil
 }
 
@@ -99,7 +98,7 @@ func (shop *Shop) ListenAndServe() error {
 	select {
 	case err := <-serveErr:
 		return err
-	
+
 	case <-quit:
 		// shutdown the server with a grace period of configured timeout
 		c, cancel := context.WithTimeout(context.Background(), config.HTTP.DrainTimeout)
@@ -110,9 +109,9 @@ func (shop *Shop) ListenAndServe() error {
 
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	message := r.URL.Path
-  	message = strings.TrimPrefix(message, "/")
-  	message = "Hello " + message
-  	w.Write([]byte(message))
+	message = strings.TrimPrefix(message, "/")
+	message = "Hello " + message
+	w.Write([]byte(message))
 }
 
 func dialRedis(config *configuration.Configuration) (*redis.Pool, error) {
