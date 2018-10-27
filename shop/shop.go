@@ -6,18 +6,20 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
+	"time"
 
-	"github.com/gomodule/redigo/redis"
-	"github.com/gorilla/mux"
+	logstash "github.com/bshuster-repo/logrus-logstash-hook"
+	"github.com/bugsnag/bugsnag-go"
+	gorhandlers "github.com/gorilla/handlers"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/syaiful6/thatique/configuration"
 	scontext "github.com/syaiful6/thatique/context"
-	sredis "github.com/syaiful6/thatique/redis"
+	"github.com/syaiful6/thatique/shop/handlers"
 	"github.com/syaiful6/thatique/shop/listener"
+	"github.com/syaiful6/thatique/uuid"
 	"github.com/syaiful6/thatique/version"
 )
 
@@ -54,26 +56,38 @@ var ServeCmd = &cobra.Command{
 type Shop struct {
 	config *configuration.Configuration
 	server *http.Server
-	Redis  *redis.Pool
+	app    *handlers.App
 }
 
 func NewShop(ctx context.Context, config *configuration.Configuration) (*Shop, error) {
-	redis, err := dialRedis(config)
+	ctx, err := configureLogging(ctx, config)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error configuring logger: %v", err)
 	}
 
-	router := mux.NewRouter()
-	router.HandleFunc("/", HomeHandler)
+	// inject a logger into the uuid library. warns us if there is a problem
+	// with uuid generation under low entropy.
+	uuid.Loggerf = scontext.GetLogger(ctx).Warnf
+
+	app, err := handlers.NewApp(ctx, config)
+	if err != nil {
+		return nil, fmt.Errorf("error creting handlers app: %v", err)
+	}
+
+	handler := panicHandler(configureReporting(app))
+
+	if !config.Log.AccessLog.Disabled {
+		handler = gorhandlers.CombinedLoggingHandler(os.Stdout, handler)
+	}
 
 	server := &http.Server{
-		Handler: router,
+		Handler: handler,
 	}
 
 	return &Shop{
+		app:    app,
 		config: config,
 		server: server,
-		Redis:  redis,
 	}, nil
 }
 
@@ -101,43 +115,108 @@ func (shop *Shop) ListenAndServe() error {
 
 	case <-quit:
 		// shutdown the server with a grace period of configured timeout
+		scontext.GetLogger(shop.app).Info("stopping server gracefully. Draining connections for ", config.HTTP.DrainTimeout)
 		c, cancel := context.WithTimeout(context.Background(), config.HTTP.DrainTimeout)
 		defer cancel()
 		return shop.server.Shutdown(c)
 	}
 }
 
-func HomeHandler(w http.ResponseWriter, r *http.Request) {
-	message := r.URL.Path
-	message = strings.TrimPrefix(message, "/")
-	message = "Hello " + message
-	w.Write([]byte(message))
+// panicHandler add an HTTP handler to web app. The handler recover the happening
+// panic. logrus.Panic transmits panic message to pre-config log hooks, which is
+// defined in config.yml.
+func panicHandler(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				log.Panic(fmt.Sprintf("%v", err))
+			}
+		}()
+		handler.ServeHTTP(w, r)
+	})
 }
 
-func dialRedis(config *configuration.Configuration) (*redis.Pool, error) {
-	var pool *redis.Pool
+func configureReporting(app *handlers.App) http.Handler {
+	var handler http.Handler = app
 
-	size, network, address, db, password := 10, "tcp", ":6379", 0, ""
+	if app.Config.Reporting.Bugsnag.APIKey != "" {
+		bugsnagConfig := bugsnag.Configuration{
+			APIKey: app.Config.Reporting.Bugsnag.APIKey,
+		}
+		ver := scontext.GetVersion(app.Context)
+		if ver != "" {
+			bugsnagConfig.AppVersion = ver
+		}
+		if app.Config.Reporting.Bugsnag.ReleaseStage != "" {
+			bugsnagConfig.ReleaseStage = app.Config.Reporting.Bugsnag.ReleaseStage
+		}
+		if app.Config.Reporting.Bugsnag.Endpoint != "" {
+			bugsnagConfig.Endpoint = app.Config.Reporting.Bugsnag.Endpoint
+		}
+		bugsnag.Configure(bugsnagConfig)
 
-	if config.Redis.MaxIdle != 0 {
-		size = config.Redis.MaxIdle
+		handler = bugsnag.Handler(handler)
 	}
-	if config.Redis.Addr != "" {
-		address = config.Redis.Addr
-	}
-	if config.Redis.DB != 0 {
-		db = config.Redis.DB
-	}
-	if config.Redis.Password != "" {
-		password = config.Redis.Password
-	}
-	pool, err := sredis.NewRedisPool(size, network, address, password, db)
 
+	return handler
+}
+
+// configureLogging prepares the context with a logger using the
+// configuration.
+func configureLogging(ctx context.Context, config *configuration.Configuration) (context.Context, error) {
+	log.SetLevel(logLevel(config.Log.Level))
+
+	formatter := config.Log.Formatter
+	if formatter == "" {
+		formatter = "text" // default formatter
+	}
+
+	switch formatter {
+	case "json":
+		log.SetFormatter(&log.JSONFormatter{
+			TimestampFormat: time.RFC3339Nano,
+		})
+	case "text":
+		log.SetFormatter(&log.TextFormatter{
+			TimestampFormat: time.RFC3339Nano,
+		})
+	case "logstash":
+		log.SetFormatter(&logstash.LogstashFormatter{
+			TimestampFormat: time.RFC3339Nano,
+		})
+	default:
+		// just let the library use default on empty string.
+		if config.Log.Formatter != "" {
+			return ctx, fmt.Errorf("unsupported logging formatter: %q", config.Log.Formatter)
+		}
+	}
+
+	if config.Log.Formatter != "" {
+		log.Debugf("using %q logging formatter", config.Log.Formatter)
+	}
+
+	if len(config.Log.Fields) > 0 {
+		// build up the static fields, if present.
+		var fields []interface{}
+		for k := range config.Log.Fields {
+			fields = append(fields, k)
+		}
+
+		ctx = scontext.WithValues(ctx, config.Log.Fields)
+		ctx = scontext.WithLogger(ctx, scontext.GetLogger(ctx, fields...))
+	}
+
+	return ctx, nil
+}
+
+func logLevel(level configuration.Loglevel) log.Level {
+	l, err := log.ParseLevel(string(level))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "connection to Redis server failed: %v\n", err)
+		l = log.InfoLevel
+		log.Warnf("error parsing level %q: %v, using %q	", level, err, l)
 	}
 
-	return pool, err
+	return l
 }
 
 func resolveConfiguration(args []string) (*configuration.Configuration, error) {

@@ -3,5 +3,8 @@
 *.a
 *.so
 
+// vscode
+.vscode
+
 thatique
 thatique.exe

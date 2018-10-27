@@ -3,8 +3,12 @@ log:
   level: info
   fields:
     environment: test
+reporting:
+  bugsnag:
+    apiKey: "99153094f8fbc48d175b9097f329ded6"
 http:
   addr: localhost:8034
+  secret: "(b7JmIC9!d++U?H8Yf^:[JF=+L|wtxIzHnZ4i_U.9N$iIp|Zm0"
 mongodb:
   uri: mongodb://localhost:27017
   name: thatiq-db

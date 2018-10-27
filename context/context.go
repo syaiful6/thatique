@@ -39,3 +39,34 @@ var background = &instanceContext{
 func Background() context.Context {
 	return background
 }
+
+// stringMapContext is a simple context implementation that checks a map for a
+// key, falling back to a parent if not present.
+type stringMapContext struct {
+	context.Context
+	m map[string]interface{}
+}
+
+// WithValues returns a context that proxies lookups through a map. Only
+// supports string keys.
+func WithValues(ctx context.Context, m map[string]interface{}) context.Context {
+	mo := make(map[string]interface{}, len(m)) // make our own copy.
+	for k, v := range m {
+		mo[k] = v
+	}
+
+	return stringMapContext{
+		Context: ctx,
+		m:       mo,
+	}
+}
+
+func (smc stringMapContext) Value(key interface{}) interface{} {
+	if ks, ok := key.(string); ok {
+		if v, ok := smc.m[ks]; ok {
+			return v
+		}
+	}
+
+	return smc.Context.Value(key)
+}

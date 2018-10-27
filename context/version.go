@@ -10,7 +10,10 @@ func (versionKey) String() string { return "version" }
 // gets a logger to ensure log messages are marked with the application
 // version.
 func WithVersion(ctx context.Context, version string) context.Context {
-	return context.WithValue(ctx, versionKey{}, version)
+	ctx = context.WithValue(ctx, versionKey{}, version)
+
+	// push a new logger onto the stack
+	return WithLogger(ctx, GetLogger(ctx, versionKey{}))
 }
 
 // GetVersion returns the application version from the context. An empty

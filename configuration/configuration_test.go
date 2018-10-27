@@ -29,6 +29,12 @@ var configStruct = Configuration{
 		Fields: map[string]interface{}{"environment": "test"},
 	},
 
+	Reporting: Reporting{
+		Bugsnag: BugsnagReporting{
+			APIKey: "BugsnagApiKey",
+		},
+	},
+
 	HTTP: struct {
 		Addr         string        `yaml:"addr,omitempty"`
 		Net          string        `yaml:"net,omitempty"`
@@ -75,6 +81,9 @@ log:
   level: info
   fields:
     environment: test
+reporting:
+  bugsnag:
+    apiKey: BugsnagApiKey
 http:
   addr: localhost
   headers:

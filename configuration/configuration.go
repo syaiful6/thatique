@@ -38,6 +38,9 @@ type Configuration struct {
 		Hooks []LogHook `yaml:"hooks,omitempty"`
 	}
 
+	// Reporting is the configuration for error reporting
+	Reporting Reporting `yaml:"reporting,omitempty"`
+
 	Mail Mail `yaml:"mail,omitempty"`
 
 	HTTP struct {
@@ -67,29 +70,7 @@ type Configuration struct {
 		Headers http.Header `yaml:"headers,omitempty"`
 	} `yaml:"http,omitempty"`
 
-	Redis struct {
-		// Addr specifies the the redis instance available to the application
-		Addr string `yaml:"addr,omitempty"`
-
-		Password string `yaml:"password,omitempty"`
-
-		DB int `yaml:"db,omitempty"`
-
-		DialTimeout  time.Duration `yaml:"dialtimeout,omitempty"`  // timeout for connect
-		ReadTimeout  time.Duration `yaml:"readtimeout,omitempty"`  // timeout for reads of data
-		WriteTimeout time.Duration `yaml:"writetimeout,omitempty"` // timeout for writes of data
-
-		// we always use redis Poop
-		// MaxIdle sets the maximum number of idle connections.
-		MaxIdle int `yaml:"maxidle,omitempty"`
-		// MaxActive sets the maximum number of connections that should be
-		// opened before blocking a connection request.
-		MaxActive int `yaml:"maxactive,omitempty"`
-
-		// IdleTimeout sets the amount time to wait before closing
-		// inactive connections.
-		IdleTimeout time.Duration `yaml:"idletimeout,omitempty"`
-	} `yaml:"redis,omitempty"`
+	Redis Redis `yaml:"redis,omitempty"`
 
 	MongoDB struct {
 		URI  string `yaml:"uri,omitempty"`
@@ -134,6 +115,31 @@ type Mail struct {
 
 	// To defines mail receiving address
 	To []string `yaml:"to,omitempty"`
+}
+
+// Redis configuration
+type Redis struct {
+	// Addr specifies the the redis instance available to the application
+	Addr string `yaml:"addr,omitempty"`
+
+	Password string `yaml:"password,omitempty"`
+
+	DB int `yaml:"db,omitempty"`
+
+	DialTimeout  time.Duration `yaml:"dialtimeout,omitempty"`  // timeout for connect
+	ReadTimeout  time.Duration `yaml:"readtimeout,omitempty"`  // timeout for reads of data
+	WriteTimeout time.Duration `yaml:"writetimeout,omitempty"` // timeout for writes of data
+
+	// we always use redis Poop
+	// MaxIdle sets the maximum number of idle connections.
+	MaxIdle int `yaml:"maxidle,omitempty"`
+	// MaxActive sets the maximum number of connections that should be
+	// opened before blocking a connection request.
+	MaxActive int `yaml:"maxactive,omitempty"`
+
+	// IdleTimeout sets the amount time to wait before closing
+	// inactive connections.
+	IdleTimeout time.Duration `yaml:"idletimeout,omitempty"`
 }
 
 // v0_1Configuration is a Version 0.1 Configuration struct
@@ -186,6 +192,23 @@ func (loglevel *Loglevel) UnmarshalYAML(unmarshal func(interface{}) error) error
 
 	*loglevel = Loglevel(loglevelString)
 	return nil
+}
+
+// Reporting defines error reporting methods.
+type Reporting struct {
+	// Bugsnag configures error reporting for Bugsnag (bugsnag.com).
+	Bugsnag BugsnagReporting `yaml:"bugsnag,omitempty"`
+}
+
+// BugsnagReporting configures error reporting for Bugsnag (bugsnag.com).
+type BugsnagReporting struct {
+	// APIKey is the Bugsnag api key.
+	APIKey string `yaml:"apikey,omitempty"`
+	// ReleaseStage tracks where the registry is deployed.
+	// Examples: production, staging, development
+	ReleaseStage string `yaml:"releasestage,omitempty"`
+	// Endpoint is used for specifying an enterprise Bugsnag endpoint.
+	Endpoint string `yaml:"endpoint,omitempty"`
 }
 
 // Parameters defines a key-value parameters mapping
