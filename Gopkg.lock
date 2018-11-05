@@ -78,6 +78,14 @@
   version = "v1.6.2"
 
 [[projects]]
+  digest = "1:e72d1ebb8d395cf9f346fd9cbc652e5ae222dd85e0ac842dc57f175abed6d195"
+  name = "github.com/gorilla/securecookie"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e59506cc896acb7f7bf732d4fdf5e25f7ccd8983"
+  version = "v1.1.1"
+
+[[projects]]
   digest = "1:870d441fe217b8e689d7949fef6e43efbc787e50f200cb1e70dbca9204a1d6be"
   name = "github.com/inconshreveable/mousetrap"
   packages = ["."]
@@ -187,6 +195,7 @@
     "github.com/gomodule/redigo/redis",
     "github.com/gorilla/handlers",
     "github.com/gorilla/mux",
+    "github.com/gorilla/securecookie",
     "github.com/sirupsen/logrus",
     "github.com/spf13/cobra",
     "gopkg.in/check.v1",

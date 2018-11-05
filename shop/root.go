@@ -11,6 +11,9 @@ var showVersion bool
 func init() {
 	RootCmd.AddCommand(ServeCmd)
 	RootCmd.Flags().BoolVarP(&showVersion, "version", "v", false, "show the version and exit")
+
+	sessionCommand.AddCommand(sessionGenerateKey)
+	RootCmd.AddCommand(sessionCommand)
 }
 
 // RootCmd is the main command for the 'registry' binary.
