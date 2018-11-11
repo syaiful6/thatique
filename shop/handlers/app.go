@@ -12,8 +12,8 @@ import (
 
 	"github.com/syaiful6/thatique/configuration"
 	scontext "github.com/syaiful6/thatique/context"
-	"github.com/syaiful6/thatique/models"
-	tredis "github.com/syaiful6/thatique/redis"
+	"github.com/syaiful6/thatique/shop/data"
+	tredis "github.com/syaiful6/thatique/shop/redis"
 )
 
 // randomSecretSize is the number of random bytes to generate if no secret
@@ -34,7 +34,7 @@ type App struct {
 	router *mux.Router
 
 	redis *redis.Pool
-	mongo *models.MongoConn
+	mongo *data.MongoConn
 }
 
 func NewApp(ctx context.Context, config *configuration.Configuration) (*App, error) {
@@ -44,7 +44,7 @@ func NewApp(ctx context.Context, config *configuration.Configuration) (*App, err
 	}
 
 	// connect to mongodb
-	mongodb, err := models.Dial(config.MongoDB.URI, config.MongoDB.Name)
+	mongodb, err := data.Dial(config.MongoDB.URI, config.MongoDB.Name)
 	if err != nil {
 		return nil, err
 	}

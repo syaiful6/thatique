@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ .Title }}</title>
+  <meta name="description" content="{{ .Description }}">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Fira+Sans|Ubuntu">
+  <link rel="stylesheet" href="/static/css/application.css">
+  <link rel="icon" href="/static/images/favicon.ico" />
+  {{block "head_extra" .}}
+  {{end}}
+  <body>
+    <div class="sh-viewport">
+      {{block "header" .}}
+        <div class="sh-head">
+          <nav class="sh-navbar inner">
+            <div class="sh-navbar-left">
+              <a href="/" class="sh-nav-logo sh-navbar-item">
+              </a>
+              <a class="sh-navbar-item" href="/jasa">Jasa</a>
+              <a class="sh-navbar-item" href="/toko">Toko</a>
+            </div>
+
+            <div class="sh-navbar-right">
+              <a href="/toko" class="sh-navbar-item">About</a>
+              <a class="sh-navbar-btn sh-btn" href="/auth" id="signin-button"><span>Sign in</span></a>
+            </div>
+          </nav>
+        </div>
+      {{ end }}
+
+      <main class="sh-main">
+        {{block "content" .}}
+        {{end}}
+      </main>
+    </div>
+  </body>
+</html>
