@@ -2,10 +2,8 @@ package auth
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
-	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 )
 
@@ -25,6 +23,12 @@ type UserInfo struct {
 	Id   string
 }
 
+func (u UserInfo) IsAnonymous() bool {
+	return u.Id == ""
+}
+
+var anonymous = UserInfo{Id: "",}
+
 func WithUser(ctx context.Context, user UserInfo) context.Context {
 	return userInfoContext{
 		Context: ctx,
@@ -34,7 +38,6 @@ func WithUser(ctx context.Context, user UserInfo) context.Context {
 
 type userInfoContext struct {
 	context.Context
-
 	user UserInfo
 }
 
@@ -51,14 +54,20 @@ func (uic userInfoContext) Value(key interface{}) interface{} {
 
 // authenticator
 type Authenticator struct {
-	storage sessions.Storage
+	store sessions.Store
+}
+
+func NewAuthenticator(store sessions.Store) *Authenticator {
+	return &Authenticator{
+		store: store,
+	}
 }
 
 // Middleware that load user from session and set it current user if success
 func (a *Authenticator) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {
-		userInfo, err := a.getUserFromSession(r)
-		if err != nil {
+		userInfo := a.getUserFromSession(r)
+		if userInfo.IsAnonymous() {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -66,24 +75,24 @@ func (a *Authenticator) Middleware(next http.Handler) http.Handler {
 	})
 }
 
-// get current user if any, this function may return nil
+// get current user
 func (a *Authenticator) User(r *http.Request) UserInfo {
 	u, ok := r.Context().Value(UserKey).(UserInfo)
 	if !ok {
-		return nil
+		return anonymous
 	}
 	return u
 }
 
 // Set user only to current request without persisting to session store
-func (a *Authenticator) LoginOnce(u auth.UserInfo, r *http.Request) *http.Request {
+func (a *Authenticator) LoginOnce(u UserInfo, r *http.Request) *http.Request {
 	return r.WithContext(WithUser(r.Context(), u))
 }
 
 // login user to application, return http.Request that can be passed to next http.Handler
 // so that user visible.
-func (a *Authenticator) Login(u auth.UserInfo, w http.ResponseWriter, r *http.Request) (*http.Request, error) {
-	sess, err := a.storage.Get(r, sessionName)
+func (a *Authenticator) Login(u UserInfo, w http.ResponseWriter, r *http.Request) (*http.Request, error) {
+	sess, err := a.store.Get(r, sessionName)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +108,7 @@ func (a *Authenticator) Login(u auth.UserInfo, w http.ResponseWriter, r *http.Re
 
 // logout user from application, remove userInfoContext if it can
 func (a *Authenticator) Logout(w http.ResponseWriter, r *http.Request) (*http.Request, error) {
-	sess, err := a.storage.Get(r, sessionName)
+	sess, err := a.store.Get(r, sessionName)
 	if err != nil {
 		return nil, err
 	}
@@ -118,18 +127,24 @@ func (a *Authenticator) Logout(w http.ResponseWriter, r *http.Request) (*http.Re
 	return r.WithContext(ctx.Context), nil
 }
 
-func (a *Authenticator) getUserFromSession(r *http.Request) (UserInfo, error) {
-	sess, err := a.storage.Get(r, sessionName)
+func (a *Authenticator) getUserFromSession(r *http.Request) UserInfo {
+	sess, err := a.store.Get(r, sessionName)
+	var (
+		ok bool
+		uid string
+		suid interface{}
+	)
+
 	if err != nil {
-		return nil, err
+		return anonymous
 	}
-	if uid, ok := sess.Values[userSessionKey]; !ok {
-		return nil, fmt.Error("User logged out")
-	}
-
-	if uid, ok = uid.(string); !ok {
-		return nil, fmt.Error("invalid user session value")
+	if suid, ok = sess.Values[userSessionKey]; !ok {
+		return anonymous
 	}
 
-	return UserInfo{Id: uid,}, nil
+	if uid, ok = suid.(string); !ok {
+		return anonymous
+	}
+
+	return UserInfo{Id: uid,}
 }

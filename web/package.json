@@ -1,0 +1,16 @@
+{
+  "name": "thatique",
+  "version": "0.0.1",
+  "description": "description",
+  "main": "index.js",
+  "author": "Syaiful Bahri",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "autoprefixer": "^9.1.5",
+    "cssnano": "^4.0.5",
+    "node-sass": "^4.9.3",
+    "postcss": "^7.0.2",
+    "postcss-cli": "^6.0.0"
+  }
+}

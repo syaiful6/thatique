@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg id="SVGRoot" width="128" height="128" version="1.1" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+ <metadata>
+  <rdf:RDF>
+   <cc:Work rdf:about="">
+    <dc:format>image/svg+xml</dc:format>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:title/>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <g transform="translate(0,64)" stroke-opacity="0">
+  <path d="m60-56.074a60.494 59.994 0 0 0-55.992 59.77 60.494 59.994 0 0 0 7.3672 28.574 60.494 59.994 0 0 1 48.625-29.797z" fill="#464f54"/>
+  <path d="m70-56v58.668a60.494 59.994 0 0 1 46.816 31.039 60.494 59.994 0 0 0 8.1758-30.012 60.494 59.994 0 0 0-54.992-59.695z" fill="#48b9c7"/>
+ </g>
+ <g transform="translate(0,64)" stroke-opacity="0">
+  <path d="m60 13.457a22.498 23.574 89.932 0 0-19.133 22.137 22.498 23.574 89.932 0 0 19.133 22.031v-0.42969zm10 43.738v0.17578a22.498 23.574 89.932 0 0 0.62109-0.17578z" fill="#464f54"/>
+  <path d="m70 13.699v43.672a22.498 23.574 89.932 0 0 18.016-21.891 22.498 23.574 89.932 0 0-18.016-21.781zm-11.898 43.496a22.498 23.574 89.932 0 0 1.8984 0.42969v-0.42969z" fill="#48b9c7"/>
+ </g>
+</svg>

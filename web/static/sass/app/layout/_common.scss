@@ -1,0 +1,146 @@
+.sh-viewport {
+  position: relative;
+  min-height:100%;
+}
+
+.inner {
+  margin: 0 auto;
+  max-width: 1030px;
+  width: 100%;
+}
+
+.sh-head {
+  position: relative;
+  z-index: 900;
+  margin-bottom: 40px;
+  padding: 0 4vw;
+  width: 100%;
+  border-bottom: 1px solid $light-grey;
+  background:hsla(0, 0%, 100%, .97);
+
+  @media (max-width:600px) {
+    padding-right:15px;
+    padding-left:15px;
+  }
+
+  .sh-navbar {
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+    height:55px;
+    font-size:13px;
+  }
+
+  .sh-navbar,
+  .sh-navbar-left,
+  .sh-navbar-right {
+    display: flex;
+    align-items: center;
+  }
+
+  .sh-nav-logo {
+    flex-shrink: 0;
+    display: flex!important;
+    align-items: center;
+    margin-left: -12px;
+    color:$mid-grey;
+
+    .thatiq-svg {
+      width: auto;
+      height: 25px
+    }
+  }
+
+  .sh-nav-logo-suffix {
+    position: relative;
+    margin: 0 0 0 12px;
+    padding: 0 0 0 11px;
+    font-size: 1.6rem;
+    font-weight: 400;
+    text-shadow: none;
+    transition: none;
+
+    &:before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: block;
+      width: 1px;
+      height: 23px;
+      background: lighten($mid-grey, 4%);
+      transform: rotate(25deg);
+    }
+  }
+
+  .sh-drop.active .sh-drop-trigger,
+  .sh-navbar-item-active,
+  .sh-navbar-item:hover {
+    color: lighten($dark-grey, 11%);
+    text-decoration: none;
+  }
+
+  .sh-navbar-item {
+    -ms-flex-negative: 0;
+    flex-shrink: 0;
+    display: block;
+    padding: 10px 12px;
+    color: $mid-grey;
+    font-weight: 500;
+    text-decoration: none;
+    user-select: none;
+
+    &.sh-nav-logo:hover {
+      color: inherit;
+    }
+
+    &:hover .sh-nav-logo-suffix {
+      color: inherit;
+    }
+  }
+
+  .sh-more-drop {
+    svg {
+      margin-left: 3px;
+      width: 7px;
+      height: auto
+    }
+
+    .sh-dropdown{
+      right:-73px;
+      width:146px;
+      font-size:1.2rem;
+      text-shadow:none
+    }
+
+    .sh-dropdown:after{
+      right: 66px
+    }
+
+    .sh-dropdown:before {
+      right: 64px
+    }
+
+    .sh-badge{
+      font-size: 1rem
+    }
+  }
+
+  .sh-navbar-btn {
+    margin-left: 10px;
+    color: $mid-grey;
+    transition: all .5s ease;
+
+    span {
+      padding: 8px 10px;
+      height: auto;
+      line-height: 1;
+      text-align: center;
+    }
+
+    &:hover {
+      border-color: $blue;
+      color: darken($blue, 11%);
+      transition:all .2s ease;
+    }
+  }
+}

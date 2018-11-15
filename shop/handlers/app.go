@@ -32,12 +32,12 @@ type App struct {
 	Config *configuration.Configuration
 
 	router *mux.Router
-
+	asset func(string) ([]byte, error)
 	redis *redis.Pool
 	mongo *data.MongoConn
 }
 
-func NewApp(ctx context.Context, config *configuration.Configuration) (*App, error) {
+func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *configuration.Configuration) (*App, error) {
 	redisPool, err := tredis.NewRedisPool(config.Redis)
 	if err != nil {
 		return nil, err
@@ -52,6 +52,7 @@ func NewApp(ctx context.Context, config *configuration.Configuration) (*App, err
 	app := &App{
 		Config:  config,
 		Context: ctx,
+		asset:   asset,
 		router:  RouterWithPrefix(config.HTTP.Prefix),
 		redis:   redisPool,
 		mongo:   mongodb,

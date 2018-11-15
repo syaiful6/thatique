@@ -41,6 +41,7 @@ var configStruct = Configuration{
 		Host         string        `yaml:"host,omitempty"`
 		Prefix       string        `yaml:"prefix,omitempty"`
 		Secret       string        `yaml:"secret,omitempty"`
+		SessionKeys  []string      `yaml:"session_keys,omitempty"`
 		DrainTimeout time.Duration `yaml:"draintimeout,omitempty"`
 		Headers      http.Header   `yaml:"headers,omitempty"`
 	}{

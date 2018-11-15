@@ -15,6 +15,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
+	"github.com/syaiful6/thatique/assets"
 	"github.com/syaiful6/thatique/configuration"
 	scontext "github.com/syaiful6/thatique/context"
 	"github.com/syaiful6/thatique/shop/handlers"
@@ -69,7 +70,7 @@ func NewShop(ctx context.Context, config *configuration.Configuration) (*Shop, e
 	// with uuid generation under low entropy.
 	uuid.Loggerf = scontext.GetLogger(ctx).Warnf
 
-	app, err := handlers.NewApp(ctx, config)
+	app, err := handlers.NewApp(ctx, assets.Asset, config)
 	if err != nil {
 		return nil, fmt.Errorf("error creting handlers app: %v", err)
 	}

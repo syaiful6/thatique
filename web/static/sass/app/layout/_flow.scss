@@ -1,0 +1,287 @@
+.sh-flow {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  min-height: 100%;
+}
+
+.sh-flow-head {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  padding-top: 4vh;
+  padding-bottom: 20px;
+}
+
+.sh-flow-content-wrap {
+  flex-grow: 1;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 5%;
+  padding-bottom: 8vh;
+}
+
+.sh-flow-back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  margin: 0 0 0 3%;
+  padding: 2px 9px 2px 5px;
+  border: transparent 1px solid;
+  border-radius: 4px;
+  color: $mid-grey;
+  font-weight: 100;
+  transition: all 0.3s ease;
+
+  svg {
+    margin-right: 4px;
+    height: 12px;
+    line-height: 14px;
+
+    path {
+      stroke: $mid-grey;
+      stroke-width: 1.2px;
+    }
+  }
+
+  &:hover {
+    border: darken($mid-grey, 11%) 1px solid;
+  }
+}
+
+.sh-flow-nav {
+  position: relative;
+  flex: 1;
+
+  ol {
+    display: flex;
+    justify-content: space-between;
+    margin: 0 auto;
+    padding: 0;
+    width: 160px;
+    list-style: none;
+  }
+
+  li {
+    margin: 0;
+  }
+
+  .divider {
+    align-self: center;
+    width: 22px;
+    height: 2px;
+    background-image: linear-gradient(to right, $green 33%, rgba(255, 255, 255, 0) 0%);
+    background-position: bottom;
+    background-size: 6px 2px;
+    background-repeat: repeat-x;
+  }
+
+  .active ~ .divider {
+    background-image: linear-gradient(to right, darken($mid-grey, 8%) 33%, rgba(255, 255, 255, 0) 0%);
+  }
+
+  .step {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 30px;
+    height: 30px;
+    border: transparent 2px solid;
+    background: $green;
+    border-radius: 100%;
+    color: $white;
+    vertical-align: middle;
+    text-align: center;
+    text-align: center;
+    font-size: 1.3rem;
+    line-height: 1;
+
+    .num {
+      display: none;
+    }
+
+    svg {
+      width: 26px;
+      height: 26px;
+      fill: $white;
+      stroke: $white;
+      stroke-width: 2px;
+    }
+  }
+
+  .active {
+    ~ li:not(divider) .step {
+      border: #e3e3e3 2px solid;
+      background: transparent;
+      color: #cdcdcd;
+
+      .num {
+        display: block;
+      }
+
+      svg {
+        display: none;
+      }
+    }
+
+    .step {
+      border: $green 2px solid;
+      background: transparent;
+      color: scale-color($green, $lightness: -10%);
+      cursor: default;
+
+      .num {
+        display: block;
+      }
+
+      svg {
+        display: none;
+      }
+    }
+  }
+
+  .done {
+    border: none;
+    background: $green;
+    color: $white;
+  }
+}
+
+.sh-flow-content {
+  display: flex;
+  flex-direction: column;
+  max-width: 700px;
+  width: 100%;
+  color: $mid-grey;
+  text-align: center;
+  font-size: 1.9rem;
+  line-height: 1.5em;
+  font-weight: 100;
+
+  @media (max-width: 500px) {
+    font-size: 4vw;
+  }
+
+  header {
+    margin: 0 auto;
+    max-width: 520px;
+  }
+
+  h1 {
+    font-size: 4.2rem;
+    font-weight: 100;
+
+    @media (max-width: 600px) {
+      font-size: 7vw;
+    }
+  }
+
+  strong {
+    font-weight: 400;
+  }
+
+  em {
+    color: $blue;
+    font-weight: 400;
+    font-style: normal;
+  }
+
+  .sh-flow-screenshot {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    height: 45vh;
+
+    img {
+      position: relative;
+      left: -3%;
+      flex-shrink: 0;
+      display: block;
+      margin: 0 auto;
+      max-height: 100%;
+
+      @media (max-width: 860px) {
+        left: 0;
+      }
+    }
+
+    @media (max-width: 600px) {
+      height: auto;
+    }
+  }
+
+  .sh-btn {
+    display: block;
+    margin: 20px auto 0;
+    max-width: 400px;
+  }
+
+  .sh-flow-skip {
+    display: inline-block;
+    margin-top: 5px;
+    color: #7d878a;
+    font-size: 1.2rem;
+  }
+
+  .sh-flow-create {
+    position: relative;
+    margin: 70px auto 30px;
+    padding: 50px 40px 25px;
+    max-width: 400px;
+    width: 100%;
+    border: #dae1e3 1px solid;
+    background: #f8fbfd;
+    border-radius: 5px;
+    text-align: left;
+  }
+
+  .form-group {
+    margin-bottom: 2.5rem;
+
+    label {
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: 400;
+    }
+
+    a {
+      text-decoration: underline;
+    }
+  }
+
+  input {
+    padding: 10px 10px 10px 35px;
+    border: #dae1e3 1px solid;
+    font-size: 1.6rem;
+    line-height: 1.4em;
+    font-weight: 100;
+  }
+
+  .pw-strength {
+    position: absolute;
+    top: 50%;
+    right: 1px;
+    margin-top: -11px;
+    padding: 0 10px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  .pw-strength-dot {
+    display: block;
+    margin-top: 2px;
+    width: 3px;
+    height: 3px;
+    background-color: #d9e0e3;
+    border-radius: 100%;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+}

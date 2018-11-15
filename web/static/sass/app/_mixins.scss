@@ -1,0 +1,40 @@
+@mixin gradient-bg($color) {
+  background: $color linear-gradient(180deg, mix($body-bg, $color, 15%), $color) repeat-x;
+}
+
+@mixin sh-btn-hover-mixin($color) {
+  border-color: $color;
+  color: $color;
+}
+
+@mixin sh-btn-mixin($color) {
+  padding: 1px;
+  border: 0;
+  color: $white;
+  text-shadow: 0 -1px 0 rgba(0,0,0,0.1);
+  fill: $white;
+  background: linear-gradient(
+    blacken($color, 5%),
+    scale-color($color, $lightness: -15%, $saturation: -15%)
+  );
+  box-shadow: 0 1px 0 rgba(0,0,0,0.12);
+  transition: none !important;
+
+  span {
+    background: linear-gradient(
+      whiten($color, 5%),
+      scale-color($color, $lightness: -5%, $saturation: -8%) 60%,
+      scale-color($color, $lightness: -5%, $saturation: -8%) 90%,
+      scale-color($color, $lightness: -3%, $saturation: -8%),
+    );
+    box-shadow: 0 1px 0 rgba(255,255,255,0.1) inset;
+  }
+
+  &:active, &:focus {
+    background: scale-color($color, $lightness: -20%, $saturation: -15%);
+    span {
+      background: scale-color($color, $lightness: -7%, $saturation: -10%);
+      box-shadow: none;
+    }
+  }
+}

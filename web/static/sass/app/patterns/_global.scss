@@ -1,0 +1,448 @@
+html {
+  overflow-x: hidden;
+  overflow-y: scroll;
+  font-size: 62.5%;
+  -webkit-tap-highlight-color: rgb(0, 0, 0);
+}
+
+body {
+  overflow-x: hidden;
+  color: $dark-grey;
+  font-family: $font-family;
+  font-size: 1.5rem;
+  line-height: 1.6em;
+  font-weight: 400;
+  font-style: normal;
+  letter-spacing: 0;
+  text-rendering: optimizeLegibility;
+  background: $white;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: lighten($blue, 20%);
+}
+
+/** Text
+/* ------------------------------------------------------ */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0 0 0.3em 0;
+  color: $dark-grey;
+  line-height: 1.15em;
+  text-rendering: optimizeLegibility;
+}
+
+h1 {
+  text-indent: -1px;
+  font-size: 2.9rem;
+
+  @media (max-width: 500px) {
+    font-size: 2.4rem;
+  }
+}
+
+h2 {
+  text-indent: -1px;
+  font-size: 2.2rem;
+
+  @media (max-width: 500px) {
+    font-size: 1.9rem;
+  }
+}
+
+h3 {
+  font-size: 1.9rem;
+
+  @media (max-width: 500px) {
+    font-size: 1.7rem;
+  }
+}
+
+h4 {
+  font-size: 1.7rem;
+}
+
+h5 {
+  font-size: 1.5rem;
+}
+
+h6 {
+  font-size: 1.5rem;
+}
+
+p,
+ul,
+ol,
+dl {
+  margin: 0 0 1.7em 0;
+}
+
+ol,
+ul {
+  padding-left: 1.2em;
+}
+
+li {
+  margin-bottom: 10px;
+  line-height: 1.4em;
+}
+
+ol ol,
+ul ul,
+ul ol,
+ol ul {
+  margin: 10px 0 0.4em 0;
+  padding-left: 2em;
+  font-size: 0.9em;
+}
+
+mark {
+  background-color: #fdffb6;
+}
+
+a {
+  color: $blue;
+  text-decoration: none;
+  transition: background 0.3s, color 0.3s;
+
+  &:hover {
+    text-decoration: none;
+    transition: background 0.1s, color 0.1s;
+  }
+
+  &.highlight {
+    color: $red;
+    font-weight: bold;
+  }
+}
+
+hr {
+  display: block;
+  margin: 3.2em 0;
+  padding: 0;
+  height: 1px;
+  border: 0;
+  border-top: 1px solid lighten($mid-grey, 11%);
+}
+
+dl {
+  margin: 1.6em 0;
+
+  dt {
+    float: left;
+    clear: left;
+    overflow: hidden;
+    margin-bottom: 1em;
+    width: 180px;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: bold;
+  }
+
+  dd {
+    margin-bottom: 1em;
+    margin-left: 200px;
+  }
+}
+
+blockquote {
+  margin: 1.6em 0;
+  padding: 0 1.6em 0 1.6em;
+  border-left: lighten($mid-grey, 11%) 0.6em solid;
+
+  p {
+    margin: 0.8em 0;
+    font-size: 1.2em;
+    font-weight: 300;
+  }
+
+  small {
+    display: inline-block;
+    margin: 0.8em 0 0.8em 1.5em;
+    color: $mid-grey;
+
+    &::before {
+      content: "\2014 \00A0";
+    }
+  }
+
+  cite {
+    font-weight: bold;
+
+    a {
+      font-weight: normal;
+    }
+  }
+}
+
+.markdown,
+pre,
+code,
+tt {
+  font-family: $font-family-mono;
+}
+
+code,
+tt {
+  padding: 0.2rem 0.3rem 0.1rem;
+  border: darken($light-grey, 11%) 1px solid;
+  background: $light-grey;
+  border-radius: 2px;
+  color: #c25;
+  vertical-align: middle;
+  white-space: pre-wrap;
+  font-size: 0.8em;
+  line-height: 1em;
+}
+
+pre {
+  overflow: auto;
+  margin: 1.6em 0;
+  padding: 10px;
+  width: 100%;
+  border: darken($light-grey, 11%) 1px solid;
+  background: $light-grey;
+  border-radius: 3px;
+  white-space: pre;
+  font-family: $font-family-mono;
+  font-size: 0.9em;;
+
+  code, tt {
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    white-space: pre-wrap;
+    font-size: inherit;
+  }
+}
+
+kbd {
+  display: inline-block;
+  margin-bottom: 0.4em;
+  padding: 1px 8px;
+  border: $mid-grey 1px solid;
+  background: $light-grey;
+  border-radius: 4px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 1px 0 0 #fff inset;
+  color: $dark-grey;
+  text-shadow: $white 0 1px 0;
+  font-size: 0.9em;
+  font-weight: bold;
+}
+
+button {
+  padding: 0;
+  outline: none;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+i {
+  display: block;
+}
+
+img {
+  max-width: 100%;
+}
+
+
+/* Utilities
+/* ---------------------------------------------------------- */
+
+.clearfix,
+.clearfix:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.wrapper {
+  position: relative;
+}
+
+.show {
+  display: block !important;
+}
+
+.hidden {
+  visibility: hidden !important;
+  display: none !important;
+}
+
+.invisible {
+  visibility: hidden;
+}
+
+.sr-only {
+  position: absolute;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  margin: -1px;
+  padding: 0;
+  width: 1px;
+  height: 1px;
+  border: 0;
+}
+
+.sr-only-focusable:focus {
+  z-index: 900;
+  overflow: visible;
+  clip: auto;
+  margin: 0;
+  padding: 0 10px;
+  width: auto;
+  height: auto;
+  background-color: $light-grey;
+  color: $dark-grey;
+  text-decoration: none;
+  line-height: 49px;
+  font-weight: bold;
+}
+
+.right {
+  float: right;
+}
+
+.left {
+  float: left;
+}
+
+.vertical {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.flex {
+  display: flex;
+}
+
+.avoid-break-out {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+
+  word-break: break-all;
+  word-break: break-word;
+
+  hyphens: auto;
+}
+
+/* Typography utility
+/* --------------------------------------------------------- */
+.sh-anchor {
+  color: inherit;
+}
+
+.sh-anchor,
+.sh-anchor:hover {
+  text-decoration: none;
+}
+
+.sh-header {
+  padding: 30px 0 60px;
+  text-align: center;
+}
+
+.sh-header h1,
+.sh-mainhead {
+  margin:0;
+  font-size:4.4rem;
+  font-weight:300;
+}
+
+.sh-mainhead {
+  color:inherit;
+  letter-spacing:-2px;
+}
+
+.sh-subhead {
+  margin:.3em 0 0;
+  font-size:2rem;
+  line-height:1.3em;
+  opacity: .7;
+}
+
+/* Animations
+/* ---------------------------------------------------------- */
+
+@keyframes fade-in {
+  from {
+      opacity: 0;
+  }
+
+  to {
+      opacity: 1;
+  }
+}
+
+@keyframes fade-in-snap {
+  to {
+      opacity: 1;
+  }
+}
+
+@keyframes fade-in-scale {
+  from {
+      opacity: 0;
+      transform: scale(0.95);
+  }
+
+  to {
+      opacity: 1;
+      transform: scale(1);
+  }
+}
+
+@keyframes fade-out {
+  from {
+      opacity: 1;
+  }
+
+  to {
+      opacity: 0;
+  }
+}
+
+@keyframes keyboard-focus-style-fade-out {
+  from {
+      box-shadow: inset 0 0 30px 1px lighten($mid-grey, 20%);
+  }
+
+  to {
+      box-shadow: none;
+  }
+}
+
+@keyframes spin {
+  from {
+      transform: rotate(0deg);
+  }
+
+  to {
+      transform: rotate(360deg);
+  }
+}
+
+.fade-in {
+  animation: fade-in 0.2s;
+  animation-fill-mode: forwards;
+}
+
+.fade-in-scale {
+  animation: fade-in-scale 0.2s;
+  animation-fill-mode: forwards;
+}
+
+.fade-out {
+  animation: fade-out 0.5s;
+  animation-fill-mode: forwards;
+}

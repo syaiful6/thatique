@@ -1,0 +1,84 @@
+$contrasted-treshold: 128 !default;
+$contrasted-dark: #000 !default;
+$contrasted-light: #fff !default;
+
+@function yiq-is-light($color, $treshold: $contrasted-treshold) {
+  $red: red($color);
+  $green: green($color);
+  $blue: blue($color);
+
+  $ret: (($red*299)+($green*587)+($blue*114))/1000;
+
+  @return if($ret >= $treshold, true, false);
+}
+
+@function yiq-contrast-color(
+  $base,
+  $dark: $contrasted-dark,
+  $light: $contrasted-light,
+  $treshold: $contrasted-treshold
+) {
+  @return if(yiq-is-light($base, $treshold), $dark, $light);
+}
+
+@function xx-apply-wb($col, $w, $b) {
+  $col: $col / 255;
+  @return round(($col * (1 - $w - $b) + $w) * 255);
+}
+
+@function hwb($hue, $w, $b, $alpha: 1) {
+  $base: hsl($hue, 100%, 50%);
+  @if(unit($w) == "%") { $w: $w / 100% } @else { $w: $w / 100 };
+  @if(unit($b) == "%") { $b: $b / 100% } @else { $b: $b / 100 };
+
+  @if($w + $b > 1) {
+    $rat: $w + $b;
+    $w: $w / $rat;
+    $b: $b / $rat;
+  }
+
+  @return rgba(
+    xx-apply-wb(red($base), $w, $b),
+    xx-apply-wb(green($base), $w, $b),
+    xx-apply-wb(blue($base), $w, $b),
+    $alpha
+  );
+}
+
+@function hwb-channel($color) {
+  $r: red($color);
+  $g: green($color);
+  $b: blue($color);
+  $h: hue($color);
+
+  $w: 1 / 255 * min($r, min($g, $b));
+  $b: 1 - 1 / 255 * max($r, max($g, $b));
+
+  @return (
+    'hue': $h,
+    'white': $w * 100,
+    'black': $b * 100,
+  );
+}
+
+@function whiten($color, $amount) {
+  $chan: hwb-channel($color);
+  $w: map-get($chan, 'white') + $amount;
+
+  @return hwb(
+    map-get($chan, 'hue'),
+    $w,
+    map-get($chan, 'black')
+  );
+}
+
+@function blacken($color, $amount) {
+  $chan: hwb-channel($color);
+  $b: map-get($chan, 'black') + $amount;
+
+  @return hwb(
+    map-get($chan, 'hue'),
+    map-get($chan, 'white'),
+    $b
+  );
+}

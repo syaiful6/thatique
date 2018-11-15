@@ -1,0 +1,109 @@
+.sh-btn {
+  display: inline-block;
+  outline: none;
+  border: 1px solid scale-color($light-grey, $lightness: -5%, $saturation: -10%);
+  color: blacken(scale-color($light-grey, $lightness: -27%), 15%);
+  text-shadow: 0 1px 0 $white;
+  text-decoration: none !important;
+  user-select: none;
+  fill: blacken(scale-color($light-grey, $lightness: -27%), 15%);
+  border-radius: 5px;
+  transition: all 0.2s ease;
+  transition-property: color, border-color, background, width, height;
+  -webkit-font-smoothing: subpixel-antialiased;
+
+  &:hover {
+    border-color: scale-color($light-grey, $lightness: -5%, $saturation: -10%);
+  }
+
+  span {
+    display: block;
+    overflow: hidden;
+    padding: 0 12px;
+    height: 33px;
+    font-size: 1.3rem;
+    line-height: 33px;
+    font-weight: 400;
+    text-align: center;
+    letter-spacing: 0.2px;
+    border-radius: 4px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &.disabled, &[disabled] {
+    box-shadow: none;
+    opacity: 0.8;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  svg {
+    display: inline-block;
+  }
+}
+
+$button-colors: (
+  'blue': $blue,
+  'red': $red,
+  'grey': $dark-grey
+);
+
+@each $name, $color in $button-colors {
+  .sh-btn-#{$name} {
+    @include sh-btn-mixin($color);
+  }
+}
+
+/* Special button
+/* ----------------------------------------------------- */
+.sh-btn-white {
+  background: $white;
+
+  span {
+    height: 38px;
+  }
+}
+
+.sh-btn-block {
+  display: block;
+  width: 100%;
+}
+
+.sh-btn-block svg,
+.sh-btn-icon svg {
+  width: 1em;
+  height: 1em;
+  margin-right: 0.5em;
+  fill: $white;
+}
+
+.sh-btn-icon {
+  span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  svg.sh-spinner {
+    left: 5px;
+
+    rect {
+      fill: lighten($mid-grey, 15%);
+    }
+  }
+}
+
+.sh-btn-icon-right svg,
+svg.sh-btn-icon-right {
+  margin-left: 0.5em;
+  margin-right: 0;
+}
+
+.sh-btn-icon svg path {
+  stroke: #fff;
+}
+
+.sh-btn-icon-no-margin {
+  margin: 0;
+}

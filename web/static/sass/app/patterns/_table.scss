@@ -1,0 +1,53 @@
+.table,
+table {
+  margin: 1.6em 0;
+  max-width: 100%;
+  width: 100%;
+  background-color: transparent;
+
+  th,
+  td {
+    padding: 8px;
+    vertical-align: middle;
+    text-align: left;
+    line-height: 20px;
+    user-select: text;
+  }
+}
+
+.table {
+  th, td {
+    border-top: 1px solid $mid-grey;
+  }
+
+  th {
+    color: $mid-grey;
+  }
+
+  caption + thead tr:first-child th,
+  caption + thead tr:first-child td,
+  colgroup + thead tr:first-child th,
+  colgroup + thead tr:first-child td,
+  thead:first-child tr:first-child th,
+  thead:first-child tr:first-child td {
+    border-top: 0;
+  }
+
+  tbody + tbody {
+    border-top: 2px solid $mid-grey;
+  }
+
+  table table {
+    background-color: $white;
+  }
+
+  tbody > tr:nth-child(odd) > td,
+  tbody > tr:nth-child(odd) > th {
+    background-color: lighten($mid-grey, 10%);
+  }
+
+  &.plain tbody > tr:nth-child(odd) > td,
+  &.plain tbody > tr:nth-child(odd) > th {
+    background: transparent;
+  }
+}

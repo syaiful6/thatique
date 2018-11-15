@@ -8,11 +8,11 @@
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Fira+Sans|Ubuntu">
   <link rel="stylesheet" href="/static/css/application.css">
   <link rel="icon" href="/static/images/favicon.ico" />
-  {{block "head_extra" .}}
-  {{end}}
+  {{ block "head_extra" . }}
+  {{ end }}
   <body>
     <div class="sh-viewport">
-      {{block "header" .}}
+      { {block "header" . }}
         <div class="sh-head">
           <nav class="sh-navbar inner">
             <div class="sh-navbar-left">
@@ -31,8 +31,7 @@
       {{ end }}
 
       <main class="sh-main">
-        {{block "content" .}}
-        {{end}}
+        {{ block "content" . }}{{ end }}
       </main>
     </div>
   </body>

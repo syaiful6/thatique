@@ -1,7 +1,6 @@
 package configuration
 
 import (
-	"encoding/base64"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -60,7 +59,7 @@ type Configuration struct {
 		// Secret specifies the secret key which HMAC tokens are created with.
 		Secret string `yaml:"secret,omitempty"`
 
-		SessionKey Base64Key `yaml:"session_key"`
+		SessionKeys []string `yaml:"session_keys,omitempty"`
 
 		// Amount of time to wait for connection to drain before shutting down when registry
 		// receives a stop signal
@@ -194,22 +193,6 @@ func (loglevel *Loglevel) UnmarshalYAML(unmarshal func(interface{}) error) error
 	}
 
 	*loglevel = Loglevel(loglevelString)
-	return nil
-}
-
-type Base64Key []byte
-
-func (b64Key *Base64Key) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var b64KeyString string
-	err := unmarshal(&b64KeyString)
-	if err != nil {
-		return err
-	}
-	data, err := base64.StdEncoding.DecodeString(b64KeyString)
-	if err != nil {
-		return err
-	}
-	*b64Key = Base64Key(data)
 	return nil
 }
 

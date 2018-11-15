@@ -9,3 +9,7 @@
 thatique
 thatique.exe
 config-dev.yml
+
+node_modules
+# compiled static files
+assets/static
