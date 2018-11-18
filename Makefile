@@ -6,6 +6,9 @@ build-assets:
 			--config web
 	go-bindata -o assets/assets.go -pkg assets assets/...
 
+build: build-assets
+	go build
+
 clean:
 	@rm assets/assets.go
 	@rm -rf assets/static

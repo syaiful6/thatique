@@ -20,19 +20,19 @@ const (
 )
 
 type UserInfo struct {
-	Id   string
+	Id string
 }
 
 func (u UserInfo) IsAnonymous() bool {
 	return u.Id == ""
 }
 
-var anonymous = UserInfo{Id: "",}
+var anonymous = UserInfo{Id: ""}
 
 func WithUser(ctx context.Context, user UserInfo) context.Context {
 	return userInfoContext{
 		Context: ctx,
-		user: user,
+		user:    user,
 	}
 }
 
@@ -65,7 +65,7 @@ func NewAuthenticator(store sessions.Store) *Authenticator {
 
 // Middleware that load user from session and set it current user if success
 func (a *Authenticator) Middleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userInfo := a.getUserFromSession(r)
 		if userInfo.IsAnonymous() {
 			next.ServeHTTP(w, r)
@@ -130,8 +130,8 @@ func (a *Authenticator) Logout(w http.ResponseWriter, r *http.Request) (*http.Re
 func (a *Authenticator) getUserFromSession(r *http.Request) UserInfo {
 	sess, err := a.store.Get(r, sessionName)
 	var (
-		ok bool
-		uid string
+		ok   bool
+		uid  string
 		suid interface{}
 	)
 
@@ -146,5 +146,5 @@ func (a *Authenticator) getUserFromSession(r *http.Request) UserInfo {
 		return anonymous
 	}
 
-	return UserInfo{Id: uid,}
+	return UserInfo{Id: uid}
 }

@@ -30,11 +30,10 @@ type App struct {
 	context.Context
 
 	Config *configuration.Configuration
-
+	asset  func(string) ([]byte, error)
 	router *mux.Router
-	asset func(string) ([]byte, error)
-	redis *redis.Pool
-	mongo *data.MongoConn
+	redis  *redis.Pool
+	mongo  *data.MongoConn
 }
 
 func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *configuration.Configuration) (*App, error) {
@@ -63,6 +62,9 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 		return http.HandlerFunc(homeHandlerFunc)
 	}).Name("home")
 
+	app.router.PathPrefix("/static/").Handler(
+		http.StripPrefix("/static/", http.FileServer(&StaticFs{asset: asset, prefix: "assets/static"})))
+
 	app.configureSecret(config)
 
 	return app, err
@@ -89,7 +91,7 @@ func (app *App) configureSecret(configuration *configuration.Configuration) {
 			panic(fmt.Sprintf("could not generate random bytes for HTTP secret: %v", err))
 		}
 		configuration.HTTP.Secret = string(secretBytes[:])
-		scontext.GetLogger(app).Warn("No HTTP secret provided - generated random secret. This may cause problems with uploads if multiple registries are behind a load-balancer. To provide a shared secret, fill in http.secret in the configuration file or set the THATIQ_HTTP_SECRET environment variable.")
+		scontext.GetLogger(app).Warn("No HTTP secret provided - generated random secret.")
 	}
 }
 

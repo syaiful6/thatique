@@ -48,10 +48,10 @@ func Create(email, password string) (*User, error) {
 	str := base64.URLEncoding.EncodeToString(b)
 
 	return &User{
-		Email: email,
-		Password: str,
+		Email:     email,
+		Password:  str,
 		Superuser: false,
-		Staff: false,
+		Staff:     false,
 	}, nil
 }
 

@@ -4,10 +4,9 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"github.com/gorilla/securecookie"
+	"github.com/spf13/cobra"
 )
-
 
 //
 var secretKeyCommand = &cobra.Command{
@@ -20,7 +19,7 @@ var secretKeyCommand = &cobra.Command{
 }
 
 var secretKeyGenerate = &cobra.Command{
-	Use: "generate",
+	Use:   "generate",
 	Short: "generate secret key",
 	Long:  "generate secret key",
 	Run: func(cmd *cobra.Command, args []string) {
