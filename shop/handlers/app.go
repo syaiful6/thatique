@@ -4,7 +4,10 @@ import (
 	"context"
 	cryptorand "crypto/rand"
 	"fmt"
+	"html/template"
 	"net/http"
+	"path"
+	"path/filepath"
 	"time"
 
 	"github.com/gomodule/redigo/redis"
@@ -58,9 +61,7 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 	}
 
 	// Register the handler dispatchers.
-	app.handle("/", func(ctx *Context, r *http.Request) http.Handler {
-		return http.HandlerFunc(homeHandlerFunc)
-	}).Name("home")
+	app.handle("/", homepageDispatcher).Name("home")
 
 	app.router.PathPrefix("/static/").Handler(
 		http.StripPrefix("/static/", http.FileServer(&StaticFs{asset: asset, prefix: "assets/static"})))
@@ -158,10 +159,33 @@ func (app *App) context(w http.ResponseWriter, r *http.Request) *Context {
 	}
 }
 
-func homeHandlerFunc(w http.ResponseWriter, r *http.Request) {
-	const emptyJSON = "{}"
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("Content-Length", fmt.Sprint(len(emptyJSON)))
+func (app *App) parseTemplate(tpl *template.Template, name string) (*template.Template, error) {
+	assetPath := path.Join("assets/templates", filepath.FromSlash(path.Clean("/"+name)))
+	if len(assetPath) > 0 && assetPath[0] == '/' {
+		assetPath = assetPath[1:]
+	}
 
-	fmt.Fprint(w, emptyJSON)
+	var b []byte
+	var err error
+	if b, err = app.asset(assetPath); err != nil {
+		return nil, err
+	}
+
+	return tpl.Parse(string(b))
+}
+
+func (app *App) template(name string, base string, tpls ...string) (tpl *template.Template, err error) {
+	tpl = template.New(name)
+
+	if tpl, err = app.parseTemplate(tpl, base); err != nil {
+		return nil, err
+	}
+
+	for _, tn := range tpls {
+		if tpl, err = app.parseTemplate(tpl, tn); err != nil {
+			return nil, err
+		}
+	}
+
+	return
 }
