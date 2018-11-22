@@ -2,6 +2,7 @@ package user
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -28,6 +29,11 @@ type User struct {
 	Superuser bool          `bson:"is_superuser"`
 	Staff     bool          `bson:"is_staff"`
 	CreatedAt time.Time     `bson:"created_at"`
+}
+
+type UserProvider interface {
+	Get(string) (*User, error)
+	Save(*User)
 }
 
 type SerializeUser struct {
@@ -65,4 +71,15 @@ func (user *User) VerifyPassword(pswd string) bool {
 	}
 
 	return true
+}
+
+func (user *User) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&SerializeUser{
+		Id:        user.Id.Hex(),
+		Profile:   user.Profile,
+		Email:     user.Email,
+		Superuser: user.Superuser,
+		Staff:     user.Staff,
+		CreatedAt: user.CreatedAt,
+	})
 }

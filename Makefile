@@ -12,3 +12,6 @@ build: build-assets
 clean:
 	@rm assets/assets.go
 	@rm -rf assets/static
+
+lint:
+	go fmt ./...
