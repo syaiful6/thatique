@@ -13,7 +13,7 @@ type Email struct {
 	domain string
 }
 
-func NewEmail(s string) (Email, error) {
+func NewEmail(s string) (*Email, error) {
 	p := newEmailParser(s)
 	return p.parse()
 }
@@ -23,16 +23,38 @@ func IsValidEmail(s string) bool {
 	return err == nil
 }
 
-func (e Email) Local() string {
+func (e *Email) Local() string {
 	return e.local
 }
 
-func (e Email) Domain() string {
+func (e *Email) Domain() string {
 	return e.domain
 }
 
-func (e Email) String() string {
-	return e.local + "@" + e.domain
+func (e *Email) String() string {
+	local := e.local
+	quotelocal := false
+	for i, r := range local {
+		if isAtext(r, false, false) {
+			continue
+		}
+		if r == '.' {
+			// Dots are okay if they are surrounded by atext.
+			// We only need to check that the previous byte is
+			// not a dot, and this isn't the end of the string.
+			if i > 0 && local[i-1] != '.' && i < len(local)-1 {
+				continue
+			}
+		}
+		quotelocal = true
+		break
+	}
+
+	if quotelocal {
+		local = quoteString(local)
+	}
+
+	return local + "@" + e.domain
 }
 
 type emailParser struct {
@@ -47,7 +69,7 @@ func newEmailParser(s string) *emailParser {
 	}
 }
 
-func (p *emailParser) parse() (spec Email, err error) {
+func (p *emailParser) parse() (spec *Email, err error) {
 	orig := *p
 	defer func() {
 		if err != nil {
@@ -59,7 +81,7 @@ func (p *emailParser) parse() (spec Email, err error) {
 	var localPart string
 	p.skipSpace()
 	if p.empty() {
-		return Email{}, errors.New("mail: no addr-spec")
+		return nil, errors.New("mail: no addr-spec")
 	}
 
 	if p.peek() == '"' {
@@ -74,30 +96,36 @@ func (p *emailParser) parse() (spec Email, err error) {
 	}
 
 	if err != nil {
-		return Email{}, err
+		return nil, err
 	}
 
 	if !p.consume('@') {
-		return Email{}, errors.New("mail: missing @ in addr-spec")
+		return nil, errors.New("mail: missing @ in addr-spec")
 	}
 
 	// domain = dot-atom / domain-literal
 	var domain string
 	p.skipSpace()
 	if p.empty() {
-		return Email{}, errors.New("mail: no domain in addr-spec")
+		return nil, errors.New("mail: no domain in addr-spec")
 	}
 
 	p2 := *p
 	domain, err = p.consumeAtom(true, false)
-	if err != nil {
-		domain, err = p2.consumeDomainLiteral()
-		if err != nil {
-			return Email{}, err
-		}
+	if err == nil {
+		return &Email{local: localPart, domain: domain}, nil
 	}
 
-	return Email{local: localPart, domain: domain}, nil
+	var err2 error
+	domain, err2 = p2.consumeDomainLiteral()
+	if err2 != nil {
+		return nil, err2
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &Email{local: localPart, domain: domain}, nil
 }
 
 // consumeAtom parses an RFC 5322 atom at the start of p.
@@ -213,7 +241,7 @@ Loop:
 		case size == 1 && r == utf8.RuneError:
 			return "", errors.New("invalid chars")
 
-		case isWSP(r) || r == '\r' || r == '\n':
+		case isWSP(r):
 			i += size
 			continue Loop
 
@@ -305,6 +333,21 @@ func (p *emailParser) empty() bool {
 
 func (p *emailParser) len() int {
 	return len(p.s)
+}
+
+func quoteString(s string) string {
+	var buf strings.Builder
+	buf.WriteByte('"')
+	for _, r := range s {
+		if isQtext(r) || isWSP(r) {
+			buf.WriteRune(r)
+		} else if isVchar(r) {
+			buf.WriteByte('\\')
+			buf.WriteRune(r)
+		}
+	}
+	buf.WriteByte('"')
+	return buf.String()
 }
 
 func isDomainText(r rune) bool {
