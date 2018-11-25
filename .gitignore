@@ -13,4 +13,5 @@ config-dev.yml
 node_modules
 # compiled static files
 assets/assets.go
-assets/static
+assets/static/css
+assets/static/js

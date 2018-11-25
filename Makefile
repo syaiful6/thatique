@@ -15,3 +15,7 @@ clean:
 
 lint:
 	go fmt ./...
+
+
+test:
+	go test ./...
