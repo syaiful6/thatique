@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"html/template"
 	"net/http"
 
 	"github.com/gorilla/handlers"
@@ -11,17 +10,11 @@ import (
 
 type homepageHandler struct {
 	*Context
-	template *template.Template
 }
 
 func homepageDispatcher(ctx *Context, r *http.Request) http.Handler {
-	tpl, err := ctx.App.template("homepage", "base.html", "homepage.html")
-	if err != nil {
-		panic(err)
-	}
 	hpHandlers := &homepageHandler{
-		Context:  ctx,
-		template: tpl,
+		Context: ctx,
 	}
 
 	mhandler := handlers.MethodHandler{
@@ -33,7 +26,11 @@ func homepageDispatcher(ctx *Context, r *http.Request) http.Handler {
 }
 
 func (h *homepageHandler) GetHomepage(w http.ResponseWriter, r *http.Request) {
-	if err := h.template.Execute(w, map[string]interface{}{
+	tpl, err := h.App.template("homepage", "base.html", "homepage.html")
+	if err != nil {
+		panic(err)
+	}
+	if err := tpl.Execute(w, map[string]interface{}{
 		"Title":       "Thatiq",
 		"Description": "Executive",
 	}); err != nil {

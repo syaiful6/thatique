@@ -3,19 +3,25 @@ package handlers
 import (
 	"context"
 	cryptorand "crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"html/template"
 	"net/http"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
-	"github.com/gomodule/redigo/redis"
+	"github.com/garyburd/redigo/redis"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
+	"gopkg.in/boj/redistore.v1"
 
 	"github.com/syaiful6/thatique/configuration"
 	scontext "github.com/syaiful6/thatique/context"
+	"github.com/syaiful6/thatique/shop/auth"
 	"github.com/syaiful6/thatique/shop/data"
+	"github.com/syaiful6/thatique/shop/middlewares"
 	tredis "github.com/syaiful6/thatique/shop/redis"
 )
 
@@ -32,11 +38,13 @@ const defaultCheckInterval = 10 * time.Second
 type App struct {
 	context.Context
 
-	Config *configuration.Configuration
-	asset  func(string) ([]byte, error)
-	router *mux.Router
-	redis  *redis.Pool
-	mongo  *data.MongoConn
+	Config        *configuration.Configuration
+	asset         func(string) ([]byte, error)
+	authenticator *auth.Authenticator
+	router        *mux.Router
+	redis         *redis.Pool
+	mongo         *data.MongoConn
+	sessionStore  sessions.Store
 }
 
 func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *configuration.Configuration) (*App, error) {
@@ -51,15 +59,31 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 		return nil, err
 	}
 
-	app := &App{
-		Config:  config,
-		Context: ctx,
-		asset:   asset,
-		router:  RouterWithPrefix(config.HTTP.Prefix),
-		redis:   redisPool,
-		mongo:   mongodb,
+	redisStore, err := redistore.NewRediStoreWithPool(redisPool,
+		createSecretKeys(config.HTTP.SessionKeys...)...)
+	if err != nil {
+		return nil, err
 	}
 
+	authenticator := auth.NewAuthenticator(redisStore)
+	app := &App{
+		Config:        config,
+		Context:       ctx,
+		asset:         asset,
+		router:        RouterWithPrefix(config.HTTP.Prefix),
+		redis:         redisPool,
+		mongo:         mongodb,
+		sessionStore:  redisStore,
+		authenticator: authenticator,
+	}
+
+	authWeb := &middlewares.IfRequestMiddleware{
+		Inner: authenticator.Middleware,
+		Predicate: func(r *http.Request) bool {
+			return !strings.HasPrefix(r.URL.Path, "/api")
+		},
+	}
+	app.router.Use(authWeb.Middleware)
 	// Register the handler dispatchers.
 	app.handle("/", homepageDispatcher).Name("home")
 
@@ -188,4 +212,24 @@ func (app *App) template(name string, base string, tpls ...string) (tpl *templat
 	}
 
 	return
+}
+
+func createSecretKeys(keyPairs ...string) [][]byte {
+	xs := make([][]byte, len(keyPairs))
+	var (
+		err error
+		key []byte
+	)
+	for _, s := range keyPairs {
+		if strings.HasPrefix(s, "base64:") {
+			key, err = base64.StdEncoding.DecodeString(strings.TrimPrefix(s, "base64:"))
+			if err != nil {
+				continue
+			}
+			xs = append(xs, key)
+		} else {
+			xs = append(xs, []byte(s))
+		}
+	}
+	return xs
 }

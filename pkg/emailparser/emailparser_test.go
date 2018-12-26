@@ -4,48 +4,48 @@ import (
 	"testing"
 )
 
-var tests = []struct{
-	s string
+var tests = []struct {
+	s     string
 	valid bool
 	email *Email
 }{
 	{
-		s: `luci@machine.example`,
+		s:     `luci@machine.example`,
 		valid: true,
 		email: &Email{
-			local: "luci",
+			local:  "luci",
 			domain: "machine.example",
 		},
 	},
 	{
-		s: `john.q.public@example.com`,
+		s:     `john.q.public@example.com`,
 		valid: true,
 		email: &Email{
-			local: `john.q.public`,
+			local:  `john.q.public`,
 			domain: `example.com`,
 		},
 	},
 	{
-		s: `nami@pub.example.com`,
+		s:     `nami@pub.example.com`,
 		valid: true,
 		email: &Email{
-			local: `nami`,
+			local:  `nami`,
 			domain: `pub.example.com`,
 		},
 	},
 	{
-		s: `"my@strange@address"@example.com`,
+		s:     `"my@strange@address"@example.com`,
 		valid: true,
 		email: &Email{
-			local: `my@idiot@address`,
+			local:  `my@idiot@address`,
 			domain: `example.com`,
 		},
 	},
 	{
-		s: `"first last"@example.com`,
+		s:     `"first last"@example.com`,
 		valid: true,
 		email: &Email{
-			local: `first last`,
+			local:  `first last`,
 			domain: `example.com`,
 		},
 	},
@@ -53,9 +53,9 @@ var tests = []struct{
 
 func TestEmailParser(t *testing.T) {
 	var (
-		p *emailParser
+		p   *emailParser
 		err error
-		em *Email
+		em  *Email
 	)
 	for _, test := range tests {
 		p = newEmailParser(test.s)

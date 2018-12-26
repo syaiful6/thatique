@@ -10,15 +10,18 @@
   version = "v0.4.1"
 
 [[projects]]
-  digest = "1:a9ef0c82c0459e56e52a374cff03bc7b21a2e76bd957cc368fafd23ca0ba0b45"
+  digest = "1:aeb8a3c88503ace4a5ac883491fcff76a610636ba9dc4753dc18740aae5cc937"
   name = "github.com/bugsnag/bugsnag-go"
   packages = [
     ".",
+    "device",
     "errors",
+    "headers",
+    "sessions",
   ]
   pruneopts = "UT"
-  revision = "3f5889f222e9c07aa1f62c5e8c202e402ce574cd"
-  version = "v1.3.2"
+  revision = "834d8fee64233ea79b0389ad7a5a438261788f66"
+  version = "v1.4.0"
 
 [[projects]]
   digest = "1:3049c43c6d1cfaa347acd27d6342187f8f38d9f416bbba7b02b43f82848302d2"
@@ -27,6 +30,17 @@
   pruneopts = "UT"
   revision = "4009b2b7c78d820cc4a2e42f035bb557ce4ae45b"
   version = "v1.2.0"
+
+[[projects]]
+  digest = "1:0594af97b2f4cec6554086eeace6597e20a4b69466eb4ada25adf9f4300dddd2"
+  name = "github.com/garyburd/redigo"
+  packages = [
+    "internal",
+    "redis",
+  ]
+  pruneopts = "UT"
+  revision = "a69d19351219b6dd56f274f96d85a7014a2ec34e"
+  version = "v1.6.0"
 
 [[projects]]
   branch = "master"
@@ -43,15 +57,12 @@
   revision = "eeefdecb41b842af6dc652aaea4026e8403e62df"
 
 [[projects]]
-  digest = "1:38ec74012390146c45af1f92d46e5382b50531247929ff3a685d2b2be65155ac"
-  name = "github.com/gomodule/redigo"
-  packages = [
-    "internal",
-    "redis",
-  ]
+  digest = "1:c594a691090b434d55c67f6cc8e326ef5ba49452abc059821bd5d4fd4cdef08c"
+  name = "github.com/gofrs/uuid"
+  packages = ["."]
   pruneopts = "UT"
-  revision = "9c11da706d9b7902c6da69c592f75637793fe121"
-  version = "v2.0.0"
+  revision = "7077aa61129615a0d7f45c49101cd011ab221c27"
+  version = "v3.1.2"
 
 [[projects]]
   digest = "1:c79fb010be38a59d657c48c6ba1d003a8aa651fa56b579d959d74573b7dff8e1"
@@ -134,12 +145,12 @@
   version = "v0.1.0"
 
 [[projects]]
-  digest = "1:3f53e9e4dfbb664cd62940c9c4b65a2171c66acd0b7621a1a6b8e78513525a52"
+  digest = "1:69b1cc331fca23d702bd72f860c6a647afd0aa9fcbc1d0659b1365e26546dd70"
   name = "github.com/sirupsen/logrus"
   packages = ["."]
   pruneopts = "UT"
-  revision = "ad15b42461921f1fb3529b058c6786c6a45d5162"
-  version = "v1.1.1"
+  revision = "bcd833dfe83d3cebad139e4a29ed79cb2318bf95"
+  version = "v1.2.0"
 
 [[projects]]
   digest = "1:645cabccbb4fa8aab25a956cbcbdf6a6845ca736b2c64e197ca7cbb9d210b939"
@@ -159,7 +170,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:001a4e7a40e50ff2ef32e2556bca50c4f77daa457db3ac6afc8bea9bb2122cfb"
+  digest = "1:427cdd2c12a3290ace873d2f9d3958d126c4d75596dbc09de05852da08a3dab5"
   name = "golang.org/x/crypto"
   packages = [
     "bcrypt",
@@ -167,18 +178,26 @@
     "ssh/terminal",
   ]
   pruneopts = "UT"
-  revision = "85e1b3f9139abd58575d728a509643924e3b2ebf"
+  revision = "505ab145d0a99da450461ae2c1a9f6cd10d1f447"
 
 [[projects]]
   branch = "master"
-  digest = "1:6c93c46c00889c28f5a105e7cb5ba56672fd4a2351375fa819acb44e66d427df"
+  digest = "1:3d5e79e10549fd9119cbefd614b6d351ef5bd0be2f2b103a4199788e784cbc68"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "d989b31c87461dc8ab2f1cac6792814e27fadea9"
+  revision = "b4a75ba826a64a70990f11a225237acd6ef35c9f"
+
+[[projects]]
+  digest = "1:db932d4696ed23e244a69a60d258a23816aceb012a95e4c3871c711d4fc120e7"
+  name = "gopkg.in/boj/redistore.v1"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "fc113767cd6b051980f260d6dbe84b2740c46ab0"
+  version = "v1.2"
 
 [[projects]]
   branch = "v1"
@@ -189,12 +208,12 @@
   revision = "788fd78401277ebd861206a03c884797c6ec5541"
 
 [[projects]]
-  digest = "1:342378ac4dcb378a5448dd723f0784ae519383532f5e70ade24132c4c8693202"
+  digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   pruneopts = "UT"
-  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
-  version = "v2.2.1"
+  revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
+  version = "v2.2.2"
 
 [solve-meta]
   analyzer-name = "dep"
@@ -202,9 +221,9 @@
   input-imports = [
     "github.com/bshuster-repo/logrus-logstash-hook",
     "github.com/bugsnag/bugsnag-go",
+    "github.com/garyburd/redigo/redis",
     "github.com/globalsign/mgo",
     "github.com/globalsign/mgo/bson",
-    "github.com/gomodule/redigo/redis",
     "github.com/gorilla/handlers",
     "github.com/gorilla/mux",
     "github.com/gorilla/securecookie",
@@ -212,6 +231,7 @@
     "github.com/sirupsen/logrus",
     "github.com/spf13/cobra",
     "golang.org/x/crypto/bcrypt",
+    "gopkg.in/boj/redistore.v1",
     "gopkg.in/check.v1",
     "gopkg.in/yaml.v2",
   ]
