@@ -1,4 +1,4 @@
-package user
+package auth
 
 import (
 	"testing"
@@ -6,15 +6,15 @@ import (
 
 func TestPasswordHasher(t *testing.T) {
 	userData := []struct {
-		email string
+		email    string
 		password string
 	}{
 		{
-			email: "nami@pub.example.com",
+			email:    "nami@pub.example.com",
 			password: "secret",
 		},
 		{
-			email: "luci@machine.example",
+			email:    "luci@machine.example",
 			password: "secret12333longpasswordssssssssssssssaaaaaa",
 		},
 	}

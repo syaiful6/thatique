@@ -2,11 +2,12 @@ package auth
 
 import (
 	"bytes"
+	"errors"
+	"github.com/globalsign/mgo/bson"
+	"github.com/gorilla/sessions"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"github.com/gorilla/sessions"
 )
 
 // DefaultRemoteAddr is the default remote address to return in RemoteAddr if
@@ -14,8 +15,22 @@ import (
 const DefaultRemoteAddr = "1.2.3.4"
 
 // The expected user info
-var ui = UserInfo{
-	Id: "hi@mail.com",
+var oid = bson.NewObjectId()
+var ui = &User{
+	Id: oid,
+}
+
+type fakeUserProvider struct {
+}
+
+func (p *fakeUserProvider) FindUserById(id bson.ObjectId) (*User, error) {
+	if id != oid {
+		return nil, errors.New("invalid user")
+	}
+
+	return &User{
+		Id: oid,
+	}, nil
 }
 
 // NewRecorder returns an initialized ResponseRecorder.
@@ -27,7 +42,7 @@ func NewRecorder() *httptest.ResponseRecorder {
 }
 
 func TestAuthenticatorLogin(t *testing.T) {
-	authenticator := NewAuthenticator(sessions.NewCookieStore([]byte("secret-key")))
+	authenticator := NewAuthenticator(sessions.NewCookieStore([]byte("secret-key")), &fakeUserProvider{})
 
 	r := httptest.NewRequest("GET", "http://localhost:8080/", nil)
 	w := NewRecorder()

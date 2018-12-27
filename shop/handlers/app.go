@@ -5,14 +5,12 @@ import (
 	cryptorand "crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"html/template"
 	"net/http"
-	"path"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/garyburd/redigo/redis"
+	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"gopkg.in/boj/redistore.v1"
@@ -20,7 +18,7 @@ import (
 	"github.com/syaiful6/thatique/configuration"
 	scontext "github.com/syaiful6/thatique/context"
 	"github.com/syaiful6/thatique/shop/auth"
-	"github.com/syaiful6/thatique/shop/data"
+	"github.com/syaiful6/thatique/shop/db"
 	"github.com/syaiful6/thatique/shop/middlewares"
 	tredis "github.com/syaiful6/thatique/shop/redis"
 )
@@ -37,13 +35,14 @@ const defaultCheckInterval = 10 * time.Second
 // fields should be protected.
 type App struct {
 	context.Context
+	*renderer
 
 	Config        *configuration.Configuration
 	asset         func(string) ([]byte, error)
 	authenticator *auth.Authenticator
 	router        *mux.Router
 	redis         *redis.Pool
-	mongo         *data.MongoConn
+	mongo         *db.MongoConn
 	sessionStore  sessions.Store
 }
 
@@ -54,7 +53,7 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 	}
 
 	// connect to mongodb
-	mongodb, err := data.Dial(config.MongoDB.URI, config.MongoDB.Name)
+	mongodb, err := db.Dial(config.MongoDB.URI, config.MongoDB.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -65,8 +64,9 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 		return nil, err
 	}
 
-	authenticator := auth.NewAuthenticator(redisStore)
+	authenticator := auth.NewAuthenticator(redisStore, auth.NewMgoUserProvider(mongodb))
 	app := &App{
+		renderer:      &renderer{asset: asset},
 		Config:        config,
 		Context:       ctx,
 		asset:         asset,
@@ -77,20 +77,25 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 		authenticator: authenticator,
 	}
 
+	app.configureSecret(config)
+
 	authWeb := &middlewares.IfRequestMiddleware{
-		Inner: authenticator.Middleware,
-		Predicate: func(r *http.Request) bool {
-			return !strings.HasPrefix(r.URL.Path, "/api")
-		},
+		Inner:     authenticator.Middleware,
+		Predicate: isNotApiRoute,
 	}
 	app.router.Use(authWeb.Middleware)
+
+	csrfMiddleware := &middlewares.IfRequestMiddleware{
+		Inner:     csrf.Protect([]byte(config.HTTP.Secret)),
+		Predicate: isNotApiRoute,
+	}
+	app.router.Use(csrfMiddleware.Middleware)
+
 	// Register the handler dispatchers.
 	app.handle("/", homepageDispatcher).Name("home")
 
 	app.router.PathPrefix("/static/").Handler(
 		http.StripPrefix("/static/", http.FileServer(&StaticFs{asset: asset, prefix: "assets/static"})))
-
-	app.configureSecret(config)
 
 	return app, err
 }
@@ -183,37 +188,6 @@ func (app *App) context(w http.ResponseWriter, r *http.Request) *Context {
 	}
 }
 
-func (app *App) parseTemplate(tpl *template.Template, name string) (*template.Template, error) {
-	assetPath := path.Join("assets/templates", filepath.FromSlash(path.Clean("/"+name)))
-	if len(assetPath) > 0 && assetPath[0] == '/' {
-		assetPath = assetPath[1:]
-	}
-
-	var b []byte
-	var err error
-	if b, err = app.asset(assetPath); err != nil {
-		return nil, err
-	}
-
-	return tpl.Parse(string(b))
-}
-
-func (app *App) template(name string, base string, tpls ...string) (tpl *template.Template, err error) {
-	tpl = template.New(name)
-
-	if tpl, err = app.parseTemplate(tpl, base); err != nil {
-		return nil, err
-	}
-
-	for _, tn := range tpls {
-		if tpl, err = app.parseTemplate(tpl, tn); err != nil {
-			return nil, err
-		}
-	}
-
-	return
-}
-
 func createSecretKeys(keyPairs ...string) [][]byte {
 	xs := make([][]byte, len(keyPairs))
 	var (
@@ -232,4 +206,8 @@ func createSecretKeys(keyPairs ...string) [][]byte {
 		}
 	}
 	return xs
+}
+
+func isNotApiRoute(r *http.Request) bool {
+	return !strings.HasPrefix(r.URL.Path, "/api")
 }

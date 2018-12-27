@@ -26,7 +26,7 @@ func homepageDispatcher(ctx *Context, r *http.Request) http.Handler {
 }
 
 func (h *homepageHandler) GetHomepage(w http.ResponseWriter, r *http.Request) {
-	tpl, err := h.App.template("homepage", "base.html", "homepage.html")
+	tpl, err := h.App.Template("homepage", "base.html", "homepage.html")
 	if err != nil {
 		panic(err)
 	}

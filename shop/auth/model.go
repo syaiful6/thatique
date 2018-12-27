@@ -1,4 +1,4 @@
-package user
+package auth
 
 import (
 	"encoding/base64"
@@ -8,10 +8,6 @@ import (
 
 	"github.com/globalsign/mgo/bson"
 	"golang.org/x/crypto/bcrypt"
-)
-
-var (
-	CollectionName = "users"
 )
 
 type Profile struct {
@@ -29,11 +25,6 @@ type User struct {
 	Superuser bool          `bson:"is_superuser"`
 	Staff     bool          `bson:"is_staff"`
 	CreatedAt time.Time     `bson:"created_at"`
-}
-
-type UserProvider interface {
-	Get(string) (*User, error)
-	Save(*User)
 }
 
 type SerializeUser struct {
@@ -58,7 +49,27 @@ func Create(email, password string) (*User, error) {
 		Password:  str,
 		Superuser: false,
 		Staff:     false,
+		CreatedAt: time.Now().UTC(),
 	}, nil
+}
+
+func (u *User) CollectionName() string {
+	return "users"
+}
+
+func (u *User) SortBy() string {
+	return "-created_at"
+}
+
+func (u *User) Unique() bson.M {
+	if len(u.Id) > 0 {
+		return bson.M{"_id": u.Id}
+	}
+
+	return bson.M{"email": u.Email}
+}
+
+func (u *User) Presave() {
 }
 
 func (user *User) VerifyPassword(pswd string) bool {
@@ -71,6 +82,10 @@ func (user *User) VerifyPassword(pswd string) bool {
 	}
 
 	return true
+}
+
+func (user *User) IsAnonymous() bool {
+	return len(user.Id) == 0
 }
 
 func (user *User) MarshalJSON() ([]byte, error) {
