@@ -101,8 +101,8 @@ func (shop *Shop) ListenAndServe() error {
 		return err
 	}
 
-	// setup channel to get notified on SIGTERM signal
-	signal.Notify(quit, syscall.SIGTERM)
+	// setup channel to get notified on SIGTERM and SIGINT signal
+	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
 	serveErr := make(chan error)
 
 	// Start serving in goroutine and listen for stop signal in main thread

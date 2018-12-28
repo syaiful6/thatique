@@ -13,6 +13,10 @@ type renderer struct {
 	cachedTemplate map[string]*template.Template
 }
 
+func newTemplateRenderer(asset func(string) ([]byte, error)) *renderer {
+	return &renderer{asset: asset, cachedTemplate: make(map[string]*template.Template)}
+}
+
 func (r *renderer) Template(name string, base string, tpls ...string) (tpl *template.Template, err error) {
 	if tpl, ok := r.cachedTemplate[name]; ok {
 		return tpl, nil

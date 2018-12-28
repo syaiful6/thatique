@@ -66,7 +66,7 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 
 	authenticator := auth.NewAuthenticator(redisStore, auth.NewMgoUserProvider(mongodb))
 	app := &App{
-		renderer:      &renderer{asset: asset},
+		renderer:      newTemplateRenderer(asset),
 		Config:        config,
 		Context:       ctx,
 		asset:         asset,
@@ -79,17 +79,14 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 
 	app.configureSecret(config)
 
-	authWeb := &middlewares.IfRequestMiddleware{
-		Inner:     authenticator.Middleware,
+	webMiddlewares := &middlewares.IfRequestMiddleware{
 		Predicate: isNotApiRoute,
+		Middlewares: []mux.MiddlewareFunc{
+			authenticator.Middleware,
+			csrf.Protect([]byte(config.HTTP.Secret)),
+		},
 	}
-	app.router.Use(authWeb.Middleware)
-
-	csrfMiddleware := &middlewares.IfRequestMiddleware{
-		Inner:     csrf.Protect([]byte(config.HTTP.Secret)),
-		Predicate: isNotApiRoute,
-	}
-	app.router.Use(csrfMiddleware.Middleware)
+	app.router.Use(webMiddlewares.Middleware)
 
 	// Register the handler dispatchers.
 	app.handle("/", homepageDispatcher).Name("home")
