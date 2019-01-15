@@ -36,6 +36,13 @@ type SerializeUser struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type OAuthProvider struct {
+	Id bson.ObjectId `bson:"_id,omitempty"`
+	Name string `bson:"name"`
+	Key  string `bson:"key"`
+	User bson.ObjectId `bson:"user"`
+}
+
 func Create(email, password string) (*User, error) {
 	b, err := bcrypt.GenerateFromPassword([]byte(password), 11)
 	if err != nil {
@@ -97,4 +104,19 @@ func (user *User) MarshalJSON() ([]byte, error) {
 		Staff:     user.Staff,
 		CreatedAt: user.CreatedAt,
 	})
+}
+
+func (p *OAuthProvider) CollectionName() string {
+	return "oauth_providers"
+}
+
+func (p *OAuthProvider) Unique() bson.M {
+	if len(p.Id) > 0 {
+		return bson.M{"_id": p.Id}
+	}
+
+	return bson.M{"name": p.Name, "key": p.Key}
+}
+
+func (p *OAuthProvider) PreSave() {
 }
