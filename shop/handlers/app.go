@@ -9,11 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/garyburd/redigo/redis"
+	"github.com/gomodule/redigo/redis"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
-	"github.com/gorilla/sessions"
-	"gopkg.in/boj/redistore.v1"
+	"github.com/syaiful6/sersan"
+	redistore "github.com/syaiful6/sersan/redis"
+
 
 	"github.com/syaiful6/thatique/configuration"
 	scontext "github.com/syaiful6/thatique/context"
@@ -43,7 +44,6 @@ type App struct {
 	router        *mux.Router
 	redis         *redis.Pool
 	mongo         *db.MongoConn
-	sessionStore  sessions.Store
 }
 
 func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *configuration.Configuration) (*App, error) {
@@ -58,13 +58,14 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 		return nil, err
 	}
 
-	redisStore, err := redistore.NewRediStoreWithPool(redisPool,
-		createSecretKeys(config.HTTP.SessionKeys...)...)
+	sersanstore, err := redistore.NewRediStore(redisPool)
 	if err != nil {
 		return nil, err
 	}
+	sessionstate := sersan.NewServerSessionState(sersanstore,
+		createSecretKeys(config.HTTP.SessionKeys...)...)
 
-	authenticator := auth.NewAuthenticator(redisStore, auth.NewMgoUserProvider(mongodb))
+	authenticator := auth.NewAuthenticator(auth.NewMgoUserProvider(mongodb))
 	app := &App{
 		renderer:      newTemplateRenderer(asset),
 		Config:        config,
@@ -73,7 +74,6 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 		router:        RouterWithPrefix(config.HTTP.Prefix),
 		redis:         redisPool,
 		mongo:         mongodb,
-		sessionStore:  redisStore,
 		authenticator: authenticator,
 	}
 
@@ -82,6 +82,7 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 	webMiddlewares := &middlewares.IfRequestMiddleware{
 		Predicate: isNotApiRoute,
 		Middlewares: []mux.MiddlewareFunc{
+			sersan.SessionMiddleware(sessionstate),
 			authenticator.Middleware,
 			csrf.Protect([]byte(config.HTTP.Secret)),
 		},

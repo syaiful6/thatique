@@ -5,14 +5,12 @@ import (
 	"net/http"
 
 	"github.com/globalsign/mgo/bson"
-	"github.com/gorilla/sessions"
+	"github.com/syaiful6/sersan"
 	"github.com/syaiful6/thatique/shop/db"
 )
 
 const (
-	sessionName = "auth.session"
-
-	userSessionKey = "auth.session.userKey"
+	UserSessionKey = "auth.session.userKey"
 
 	// UserKey is used to get the user object from
 	// a user context
@@ -44,7 +42,7 @@ func (uic userInfoContext) Value(key interface{}) interface{} {
 	return uic.Context.Value(key)
 }
 
-type UserProvider interface {
+type UserFinderById interface {
 	FindUserById(bson.ObjectId) (*User, error)
 }
 
@@ -66,13 +64,11 @@ func (p *MgoUserProvider) FindUserById(id bson.ObjectId) (*User, error) {
 
 // authenticator
 type Authenticator struct {
-	store    sessions.Store
-	provider UserProvider
+	provider UserFinderById
 }
 
-func NewAuthenticator(store sessions.Store, provider UserProvider) *Authenticator {
+func NewAuthenticator(provider UserFinderById) *Authenticator {
 	return &Authenticator{
-		store:    store,
 		provider: provider,
 	}
 }
@@ -106,31 +102,25 @@ func (a *Authenticator) LoginOnce(u *User, r *http.Request) *http.Request {
 // login user to application, return http.Request that can be passed to next http.Handler
 // so that user visible.
 func (a *Authenticator) Login(u *User, w http.ResponseWriter, r *http.Request) (*http.Request, error) {
-	sess, err := a.store.Get(r, sessionName)
+	sess, err := sersan.GetSession(r)
 	if err != nil {
 		return nil, err
 	}
 
 	// save the user id to session
-	sess.Values[userSessionKey] = u.Id.Hex()
-	if err = sess.Save(r, w); err != nil {
-		return nil, err
-	}
+	sess[UserSessionKey] = u.Id.Hex()
 
 	return a.LoginOnce(u, r), nil
 }
 
 // logout user from application, remove userInfoContext if it can
 func (a *Authenticator) Logout(w http.ResponseWriter, r *http.Request) (*http.Request, error) {
-	sess, err := a.store.Get(r, sessionName)
+	sess, err := sersan.GetSession(r)
 	if err != nil {
 		return nil, err
 	}
 
-	delete(sess.Values, userSessionKey)
-	if err = sess.Save(r, w); err != nil {
-		return nil, err
-	}
+	delete(sess, UserSessionKey)
 
 	// remove user from context
 	ctx, ok := r.Context().(userInfoContext)
@@ -142,7 +132,7 @@ func (a *Authenticator) Logout(w http.ResponseWriter, r *http.Request) (*http.Re
 }
 
 func (a *Authenticator) getUserFromSession(r *http.Request) *User {
-	sess, err := a.store.Get(r, sessionName)
+	sess, err := sersan.GetSession(r)
 	var (
 		ok   bool
 		uid  string
@@ -152,7 +142,7 @@ func (a *Authenticator) getUserFromSession(r *http.Request) *User {
 	if err != nil {
 		return &User{}
 	}
-	if suid, ok = sess.Values[userSessionKey]; !ok {
+	if suid, ok = sess[UserSessionKey]; !ok {
 		return &User{}
 	}
 
