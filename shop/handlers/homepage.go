@@ -18,19 +18,19 @@ func homepageDispatcher(ctx *Context, r *http.Request) http.Handler {
 	}
 
 	mhandler := handlers.MethodHandler{
-		"GET":     http.HandlerFunc(hpHandlers.GetHomepage),
-		"OPTIONS": http.HandlerFunc(hpHandlers.GetHomepage),
+		"GET":     http.HandlerFunc(hpHandlers.getHomepage),
+		"OPTIONS": http.HandlerFunc(hpHandlers.getHomepage),
 	}
 
 	return mhandler
 }
 
-func (h *homepageHandler) GetHomepage(w http.ResponseWriter, r *http.Request) {
+func (h *homepageHandler) getHomepage(w http.ResponseWriter, r *http.Request) {
 	tpl, err := h.App.Template("homepage", "base.html", "homepage.html")
 	if err != nil {
 		panic(err)
 	}
-	if err := tpl.Execute(w, map[string]interface{}{
+	if err = tpl.Execute(w, map[string]interface{}{
 		"Title":       "Thatiq",
 		"Description": "Executive",
 	}); err != nil {

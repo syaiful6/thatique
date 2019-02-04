@@ -91,6 +91,7 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 
 	// Register the handler dispatchers.
 	app.handle("/", homepageDispatcher).Name("home")
+	app.handle("/signin", signinDispatcher).Name("signin")
 
 	app.router.PathPrefix("/static/").Handler(
 		http.StripPrefix("/static/", http.FileServer(&StaticFs{asset: asset, prefix: "assets/static"})))

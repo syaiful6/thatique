@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/syaiful6/thatique/shop"
+	"github.com/syaiful6/thatique/cmd"
 )
 
 func main() {
-	shop.RootCmd.Execute()
+	cmd.RootCmd.Execute()
 }

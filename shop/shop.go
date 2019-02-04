@@ -35,7 +35,7 @@ var ServeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := scontext.WithVersion(scontext.Background(), version.Version)
 
-		config, err := resolveConfiguration(args)
+		config, err := configuration.Resolve(args)
 
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "configuration error: %v\n", err)
@@ -218,32 +218,4 @@ func logLevel(level configuration.Loglevel) log.Level {
 	}
 
 	return l
-}
-
-func resolveConfiguration(args []string) (*configuration.Configuration, error) {
-	var configurationPath string
-
-	if len(args) > 0 {
-		configurationPath = args[0]
-	} else if os.Getenv("THATIQ_CONFIGURATION_PATH") != "" {
-		configurationPath = os.Getenv("THATIQ_CONFIGURATION_PATH")
-	}
-
-	if configurationPath == "" {
-		return nil, fmt.Errorf("configuration path unspecified")
-	}
-
-	fp, err := os.Open(configurationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	defer fp.Close()
-
-	config, err := configuration.Parse(fp)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing %s: %v", configurationPath, err)
-	}
-
-	return config, nil
 }

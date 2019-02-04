@@ -1,22 +1,24 @@
-package shop
+package cmd
 
 import (
 	"github.com/spf13/cobra"
 
 	"github.com/syaiful6/thatique/version"
+	"github.com/syaiful6/thatique/shop"
 )
 
-var showVersion bool
-
 func init() {
-	RootCmd.AddCommand(ServeCmd)
 	RootCmd.Flags().BoolVarP(&showVersion, "version", "v", false, "show the version and exit")
 
+	RootCmd.AddCommand(shop.ServeCmd)
+
+	// secret
 	secretKeyCommand.AddCommand(secretKeyGenerate)
 	RootCmd.AddCommand(secretKeyCommand)
 }
 
-// RootCmd is the main command for the 'registry' binary.
+var showVersion bool
+
 var RootCmd = &cobra.Command{
 	Use:   "shop",
 	Short: "Thatiq's shop",

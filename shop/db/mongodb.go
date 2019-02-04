@@ -72,12 +72,18 @@ func (conn *MongoConn) Upsert(u Updatable) (info *mgo.ChangeInfo, err error) {
 }
 
 //
-func (conn *MongoConn) WithContext(ctx context.Context, f func(*mgo.Database) error) error {
+func (conn *MongoConn) WithContext(ctx context.Context, f func(*MongoConn) error) error {
 	sess := conn.Session.Copy()
 	defer sess.Close()
 
 	c := make(chan error, 1)
-	go func() { c <- f(sess.DB(conn.DBName)) }()
+	go func() {
+		c <- f(&MongoConn{
+			DBName: conn.DBName,
+			Session: sess,
+			DB: sess.DB(conn.DBName),
+		})
+	}()
 
 	select {
 	case <-ctx.Done():

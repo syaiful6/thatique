@@ -1,4 +1,4 @@
-package shop
+package cmd
 
 import (
 	"encoding/base64"
