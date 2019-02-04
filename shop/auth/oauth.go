@@ -1,4 +1,3 @@
-
 package auth
 
 import (
@@ -10,24 +9,24 @@ import (
 	"io"
 	"net/http"
 
-	"golang.org/x/oauth2"
 	"github.com/syaiful6/sersan"
+	"golang.org/x/oauth2"
 )
 
 var (
 	OAuth2ContextErrKey = "oauth2.ctx.err"
-	ErrTokenMismatch    = errors.New("oAuth2 state token mismatch")
-	ErrNoToken          = errors.New("oAuth2 state token not found in request")
-	InvalidToken        = errors.New("oAuth2 invalid state token")
+	ErrTokenMismatch    = errors.New("oauth2 state token mismatch")
+	ErrNoToken          = errors.New("oauth2 state token not found in request")
+	InvalidToken        = errors.New("oauth2 invalid state token")
 )
 
 type OAuth2LoginHandler struct {
 	*Authenticator
-	Name string
+	Name         string
 	RedirectPath string
-	Config *oauth2.Config
-	ErrorHandler  http.Handler
-	Fetcher UserFetcherFunc
+	Config       *oauth2.Config
+	ErrorHandler http.Handler
+	Fetcher      UserFetcherFunc
 }
 
 // a function that take `oauth2.Token` and return User. This usually get local User
@@ -87,7 +86,7 @@ func (oa *OAuth2LoginHandler) HandleCallback(w http.ResponseWriter, r *http.Requ
 	hasErr := r.FormValue("error")
 	if len(hasErr) > 0 {
 		oa.ErrorHandler.ServeHTTP(w, contextSave(r, OAuth2ContextErrKey, &OAuth2ErrorResponse{
-			err: hasErr,
+			err:  hasErr,
 			desc: r.FormValue("error_description"),
 		}))
 		return

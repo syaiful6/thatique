@@ -37,9 +37,9 @@ type SerializeUser struct {
 }
 
 type OAuthProvider struct {
-	Id bson.ObjectId `bson:"_id,omitempty"`
-	Name string `bson:"name"`
-	Key  string `bson:"key"`
+	Id   bson.ObjectId `bson:"_id,omitempty"`
+	Name string        `bson:"name"`
+	Key  string        `bson:"key"`
 	User bson.ObjectId `bson:"user"`
 }
 

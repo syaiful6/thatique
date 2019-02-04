@@ -6,7 +6,7 @@ import (
 )
 
 type IfRequestMiddleware struct {
-	Predicate	func(*http.Request) bool
+	Predicate   func(*http.Request) bool
 	Middlewares []mux.MiddlewareFunc
 }
 

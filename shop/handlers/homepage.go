@@ -28,13 +28,15 @@ func homepageDispatcher(ctx *Context, r *http.Request) http.Handler {
 func (h *homepageHandler) getHomepage(w http.ResponseWriter, r *http.Request) {
 	tpl, err := h.App.Template("homepage", "base.html", "homepage.html")
 	if err != nil {
-		panic(err)
+		h.App.handleErrorHTML(w, err)
+		return
 	}
 	if err = tpl.Execute(w, map[string]interface{}{
 		"Title":       "Thatiq",
 		"Description": "Executive",
 	}); err != nil {
 		context.GetLogger(h).Debugf("unexpected error when executing homepage.html: %v", err)
-		w.WriteHeader(500)
+		h.App.handleErrorHTML(w, err)
+		return
 	}
 }

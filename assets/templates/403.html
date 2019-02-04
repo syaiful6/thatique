@@ -1,0 +1,10 @@
+{{ define "content" }}
+  <div class="403-page">
+    <h1>Forbidden</h1>
+    {{ if .Description }}
+      <p>{{ .Description }}</p>
+    {{ else }}
+      <p>You don't have permission to access this page</p>
+    {{ end }}
+  </div>
+{{ end }}

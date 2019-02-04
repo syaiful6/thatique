@@ -5,16 +5,17 @@ import (
 	cryptorand "crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"html/template"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/globalsign/mgo"
 	"github.com/gomodule/redigo/redis"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"github.com/syaiful6/sersan"
 	redistore "github.com/syaiful6/sersan/redis"
-
 
 	"github.com/syaiful6/thatique/configuration"
 	scontext "github.com/syaiful6/thatique/context"
@@ -64,6 +65,7 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 	}
 	sessionstate := sersan.NewServerSessionState(sersanstore,
 		createSecretKeys(config.HTTP.SessionKeys...)...)
+	sessionstate.AuthKey = auth.UserSessionKey
 
 	authenticator := auth.NewAuthenticator(auth.NewMgoUserProvider(mongodb))
 	app := &App{
@@ -91,7 +93,10 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 
 	// Register the handler dispatchers.
 	app.handle("/", homepageDispatcher).Name("home")
-	app.handle("/signin", signinDispatcher).Name("signin")
+
+	// auth
+	authRouter := app.router.PathPrefix("/auth").Subrouter()
+	authRouter.Handle("", app.dispatcher(signinDispatcher)).Name("auth.signin")
 
 	app.router.PathPrefix("/static/").Handler(
 		http.StripPrefix("/static/", http.FileServer(&StaticFs{asset: asset, prefix: "assets/static"})))
@@ -185,6 +190,49 @@ func (app *App) context(w http.ResponseWriter, r *http.Request) *Context {
 		App:     app,
 		Context: ctx,
 	}
+}
+
+func (app *App) handleErrorHTML(w http.ResponseWriter, err error) {
+	var (
+		tpl  *template.Template
+		err2 error
+	)
+	if err == mgo.ErrNotFound {
+		tpl, err2 = app.Template("404", "base.html", "404.html")
+		if err2 == nil {
+			w.WriteHeader(http.StatusNotFound)
+			if err2 = tpl.Execute(w, map[string]interface{}{
+				"Title":       "404: Page Not Found",
+				"Description": "This is not the web page you are looking for",
+			}); err2 != nil {
+				err = err2
+			}
+		}
+		err = err2
+	}
+
+	if err == auth.ErrTokenMismatch || err == auth.ErrNoToken || err == auth.InvalidToken {
+		tpl, err2 = app.Template("403", "base.html", "403.html")
+		if err2 == nil {
+			w.WriteHeader(http.StatusForbidden)
+			if err2 = tpl.Execute(w, map[string]interface{}{
+				"Title":       "403: Forbidden",
+				"Description": err.Error(),
+			}); err2 != nil {
+				err = err2
+			}
+		}
+		err = err2
+	}
+
+	// otherwise just render 500
+	var b []byte
+	if b, err2 = app.asset("assets/templates/500.html"); err2 != nil {
+		panic(err2)
+	}
+
+	w.WriteHeader(http.StatusInternalServerError)
+	w.Write(b)
 }
 
 func createSecretKeys(keyPairs ...string) [][]byte {

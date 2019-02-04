@@ -101,6 +101,10 @@ func (shop *Shop) ListenAndServe() error {
 		return err
 	}
 
+	if config.HTTP.DrainTimeout == 0 {
+		return shop.server.Serve(ln)
+	}
+
 	// setup channel to get notified on SIGTERM and SIGINT signal
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
 	serveErr := make(chan error)

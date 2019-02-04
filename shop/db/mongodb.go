@@ -44,6 +44,19 @@ func Dial(uri string, db string) (*MongoConn, error) {
 	return conn, err
 }
 
+func (conn *MongoConn) Copy() *MongoConn {
+	sess := conn.Session.Copy()
+	return &MongoConn{
+		DBName:  conn.DBName,
+		Session: sess,
+		DB:      sess.DB(conn.DBName),
+	}
+}
+
+func (conn *MongoConn) Close() {
+	conn.Session.Close()
+}
+
 //
 func (conn *MongoConn) Cursor(m Model) *mgo.Collection {
 	return conn.DB.C(m.CollectionName())
@@ -73,16 +86,12 @@ func (conn *MongoConn) Upsert(u Updatable) (info *mgo.ChangeInfo, err error) {
 
 //
 func (conn *MongoConn) WithContext(ctx context.Context, f func(*MongoConn) error) error {
-	sess := conn.Session.Copy()
+	sess := conn.Copy()
 	defer sess.Close()
 
 	c := make(chan error, 1)
 	go func() {
-		c <- f(&MongoConn{
-			DBName: conn.DBName,
-			Session: sess,
-			DB: sess.DB(conn.DBName),
-		})
+		c <- f(sess)
 	}()
 
 	select {

@@ -3,8 +3,8 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/syaiful6/thatique/version"
 	"github.com/syaiful6/thatique/shop"
+	"github.com/syaiful6/thatique/version"
 )
 
 func init() {

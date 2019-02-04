@@ -9,7 +9,7 @@ import (
 func Resolve(args []string) (*Configuration, error) {
 	var (
 		configurationPath string
-		err error
+		err               error
 	)
 
 	defaultPath, err := filepath.Abs("./thatiq-config.yml")
@@ -22,7 +22,7 @@ func Resolve(args []string) (*Configuration, error) {
 	} else if os.Getenv("THATIQ_CONFIGURATION_PATH") != "" {
 		configurationPath = os.Getenv("THATIQ_CONFIGURATION_PATH")
 	} else if len(defaultPath) > 0 {
-		if  _, err = os.Stat(defaultPath); err == nil {
+		if _, err = os.Stat(defaultPath); err == nil {
 			configurationPath = defaultPath
 		}
 	}
