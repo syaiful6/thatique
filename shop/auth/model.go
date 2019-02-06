@@ -43,7 +43,7 @@ type OAuthProvider struct {
 	User bson.ObjectId `bson:"user"`
 }
 
-func Create(email, password string) (*User, error) {
+func NewUser(email, password string) (*User, error) {
 	b, err := bcrypt.GenerateFromPassword([]byte(password), 11)
 	if err != nil {
 		return nil, fmt.Errorf("error bcrypting password: %v", err)

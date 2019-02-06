@@ -2,8 +2,11 @@ package shop
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"net/http"
+	"io/ioutil"
 	"os"
 	"os/signal"
 	"syscall"
@@ -99,6 +102,77 @@ func (shop *Shop) ListenAndServe() error {
 	ln, err := listener.NewListener(config.HTTP.Net, config.HTTP.Addr)
 	if err != nil {
 		return err
+	}
+
+	if shop.config.HTTP.TLS.Certificate != "" {
+		var tlsMinVersion uint16
+		if config.HTTP.TLS.MinimumTLS == "" {
+			tlsMinVersion = tls.VersionTLS10
+		} else {
+			switch config.HTTP.TLS.MinimumTLS {
+			case "tls1.0":
+				tlsMinVersion = tls.VersionTLS10
+			case "tls1.1":
+				tlsMinVersion = tls.VersionTLS11
+			case "tls1.2":
+				tlsMinVersion = tls.VersionTLS12
+			default:
+				return fmt.Errorf("unknown minimum TLS level '%s' specified for http.tls.minimumtls", config.HTTP.TLS.MinimumTLS)
+			}
+			scontext.GetLogger(shop.app).Infof("restricting TLS to %s or higher", config.HTTP.TLS.MinimumTLS)
+		}
+
+		tlsConf := &tls.Config{
+			ClientAuth:               tls.NoClientCert,
+			NextProtos:               []string{"h2", "http/1.1"},
+			MinVersion:               tlsMinVersion,
+			PreferServerCipherSuites: true,
+			CipherSuites: []uint16{
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+			},
+		}
+
+		tlsConf.Certificates = make([]tls.Certificate, 1)
+		tlsConf.Certificates[0], err = tls.LoadX509KeyPair(config.HTTP.TLS.Certificate, config.HTTP.TLS.Key)
+		if err != nil {
+			return err
+		}
+
+		if len(config.HTTP.TLS.ClientCAs) != 0 {
+			pool := x509.NewCertPool()
+
+			for _, ca := range config.HTTP.TLS.ClientCAs {
+				caPem, err := ioutil.ReadFile(ca)
+				if err != nil {
+					return err
+				}
+
+				if ok := pool.AppendCertsFromPEM(caPem); !ok {
+					return fmt.Errorf("could not add CA to pool")
+				}
+			}
+
+			for _, subj := range pool.Subjects() {
+				scontext.GetLogger(shop.app).Debugf("CA Subject: %s", string(subj))
+			}
+
+			tlsConf.ClientAuth = tls.RequireAndVerifyClientCert
+			tlsConf.ClientCAs = pool
+		}
+
+		ln = tls.NewListener(ln, tlsConf)
+		scontext.GetLogger(shop.app).Infof("listening on %v, tls", ln.Addr())
+
+		if !shop.config.HTTP.Secure {
+			shop.config.HTTP.Secure = true
+		}
+	} else {
+		scontext.GetLogger(shop.app).Infof("listening on %v", ln.Addr())
 	}
 
 	if config.HTTP.DrainTimeout == 0 {

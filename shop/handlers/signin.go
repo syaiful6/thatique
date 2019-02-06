@@ -109,7 +109,7 @@ func (sg *signinHandler) postSignupForm(w http.ResponseWriter, r *http.Request) 
 	defer conn.Close()
 	if err := conn.Find(user, bson.M{"email": email}).One(&user); err != nil {
 		if err == mgo.ErrNotFound {
-			user.VerifyPassword(password)
+			auth.NewUser(email, password)
 			if err = sg.renderForm(w, map[string]interface{}{
 				"Title":          "Signin",
 				"Description":    "Signin to Thatiq",

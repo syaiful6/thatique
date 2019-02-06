@@ -47,7 +47,6 @@ func (rl *RateLimiter) Close() {
 
 func (rl *RateLimiter) Get(r *http.Request) *rate.Limiter {
 	rl.lock.Lock()
-	defer rl.lock.Unlock()
 
 	if rl.visitors == nil {
 		rl.visitors = make(map[string]*visitor)
@@ -55,10 +54,12 @@ func (rl *RateLimiter) Get(r *http.Request) *rate.Limiter {
 	key := rl.keyFunc(r)
 	v, ok := rl.visitors[key]
 	if !ok {
+		rl.lock.Unlock()
 		return rl.add(key)
 	}
 
 	v.lastSeen = time.Now()
+	rl.lock.Unlock()
 	return v.limiter
 }
 

@@ -66,6 +66,7 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 	sessionstate := sersan.NewServerSessionState(sersanstore,
 		createSecretKeys(config.HTTP.SessionKeys...)...)
 	sessionstate.AuthKey = auth.UserSessionKey
+	sessionstate.Options.Secure = config.HTTP.Secure
 
 	authenticator := auth.NewAuthenticator(auth.NewMgoUserProvider(mongodb))
 	app := &App{
@@ -86,7 +87,7 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 		Middlewares: []mux.MiddlewareFunc{
 			sersan.SessionMiddleware(sessionstate),
 			authenticator.Middleware,
-			csrf.Protect([]byte(config.HTTP.Secret)),
+			csrf.Protect([]byte(config.HTTP.Secret), csrf.Secure(config.HTTP.Secure)),
 		},
 	}
 	app.router.Use(webMiddlewares.Middleware)
@@ -212,8 +213,8 @@ func (app *App) handleErrorHTML(w http.ResponseWriter, err error) {
 			if err2 = tpl.Execute(w, map[string]interface{}{
 				"Title":       "404: Page Not Found",
 				"Description": "This is not the web page you are looking for",
-			}); err2 != nil {
-				err = err2
+			}); err2 == nil {
+				return
 			}
 		}
 		err = err2
@@ -226,8 +227,8 @@ func (app *App) handleErrorHTML(w http.ResponseWriter, err error) {
 			if err2 = tpl.Execute(w, map[string]interface{}{
 				"Title":       "403: Forbidden",
 				"Description": err.Error(),
-			}); err2 != nil {
-				err = err2
+			}); err2 == nil {
+				return
 			}
 		}
 		err = err2
@@ -235,7 +236,7 @@ func (app *App) handleErrorHTML(w http.ResponseWriter, err error) {
 
 	// otherwise just render 500
 	var b []byte
-	if b, err2 = app.asset("assets/templates/500.html"); err2 != nil {
+	if b, err2 = app.asset("assets/templates/50x.html"); err2 != nil {
 		panic(err2)
 	}
 

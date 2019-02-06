@@ -61,6 +61,32 @@ type Configuration struct {
 
 		SessionKeys []string `yaml:"session_keys,omitempty"`
 
+		// Secure, is this HTTP connection secure? proxy or directly
+		Secure bool `yaml:"secure",omitempty`
+
+		// TLS instructs the http server to listen with a TLS configuration.
+		// This only support simple tls configuration with a cert and key.
+		// Mostly, this is useful for testing situations or simple deployments
+		// that require tls. If more complex configurations are required, use
+		// a proxy or make a proposal to add support here.
+		TLS struct {
+			// Certificate specifies the path to an x509 certificate file to
+			// be used for TLS.
+			Certificate string `yaml:"certificate,omitempty"`
+
+			// Key specifies the path to the x509 key file, which should
+			// contain the private portion for the file specified in
+			// Certificate.
+			Key string `yaml:"key,omitempty"`
+
+			// Specifies the CA certs for client authentication
+			// A file may contain multiple CA certificates encoded as PEM
+			ClientCAs []string `yaml:"clientcas,omitempty"`
+
+			// Specifies the lowest TLS version allowed
+			MinimumTLS string `yaml:"minimumtls,omitempty"`
+		} `yaml:"tls,omitempty"`
+
 		// Amount of time to wait for connection to drain before shutting down when registry
 		// receives a stop signal
 		DrainTimeout time.Duration `yaml:"draintimeout,omitempty"`
