@@ -92,11 +92,11 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 	app.router.Use(webMiddlewares.Middleware)
 
 	// Register the handler dispatchers.
-	app.handle("/", homepageDispatcher).Name("home")
+	app.router.Handle("/", app.dispatchFunc(homepageDispatcher)).Name("home")
 
 	// auth
 	authRouter := app.router.PathPrefix("/auth").Subrouter()
-	authRouter.Handle("", app.dispatcher(signinDispatcher)).Name("auth.signin")
+	authRouter.Handle("", app.dispatch(NewSigninLimitDispatcher(10, 5))).Name("auth.signin")
 
 	app.router.PathPrefix("/static/").Handler(
 		http.StripPrefix("/static/", http.FileServer(&StaticFs{asset: asset, prefix: "assets/static"})))
@@ -149,19 +149,27 @@ func (app *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	app.router.ServeHTTP(w, r)
 }
 
-func (app *App) handle(path string, dispatch DispatchFunc) *mux.Route {
-	return app.router.Handle(path, app.dispatcher(dispatch))
-}
-
-// dispatchFunc takes a context and request and returns a constructed handler
+// Disptcher takes a context and request and returns a constructed handler
 // for the route. The dispatcher will use this to dynamically create request
 // specific handlers for each endpoint without creating a new router for each
 // request.
-type DispatchFunc func(ctx *Context, r *http.Request) http.Handler
+type Dispatcher interface {
+	DispatchHTTP(ctx *Context, r *http.Request) http.Handler
+}
 
-// dispatcher returns a handler that constructs a request specific context and
+type DispatcherFunc func(ctx *Context, r *http.Request) http.Handler
+
+func (d DispatcherFunc) DispatchHTTP(ctx *Context, r *http.Request) http.Handler {
+	return d(ctx, r)
+}
+
+func (app *App) dispatchFunc(dispatch DispatcherFunc) http.Handler {
+	return app.dispatch(dispatch)
+}
+
+// dispatch returns a handler that constructs a request specific context and
 // handler, using the dispatch factory function.
-func (app *App) dispatcher(dispatch DispatchFunc) http.Handler {
+func (app *App) dispatch(dispatch Dispatcher) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		for headerName, headerValues := range app.Config.HTTP.Headers {
 			for _, value := range headerValues {
@@ -173,7 +181,7 @@ func (app *App) dispatcher(dispatch DispatchFunc) http.Handler {
 
 		// sync up context on the request.
 		r = r.WithContext(context)
-		dispatch(context, r).ServeHTTP(w, r)
+		dispatch.DispatchHTTP(context, r).ServeHTTP(w, r)
 	})
 }
 

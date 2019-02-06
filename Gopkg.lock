@@ -241,6 +241,14 @@
   revision = "aca44879d5644da7c5b8ec6a1115e9b6ea6c40d9"
 
 [[projects]]
+  branch = "master"
+  digest = "1:9fdc2b55e8e0fafe4b41884091e51e77344f7dc511c5acedcfd98200003bff90"
+  name = "golang.org/x/time"
+  packages = ["rate"]
+  pruneopts = "UT"
+  revision = "85acf8d2951cb2a3bde7632f9ff273ef0379bcbd"
+
+[[projects]]
   digest = "1:6f3bd49ddf2e104e52062774d797714371fac1b8bddfd8e124ce78e6b2264a10"
   name = "google.golang.org/appengine"
   packages = [
@@ -291,6 +299,7 @@
     "github.com/syaiful6/sersan/redis",
     "golang.org/x/crypto/bcrypt",
     "golang.org/x/oauth2",
+    "golang.org/x/time/rate",
     "gopkg.in/check.v1",
     "gopkg.in/yaml.v2",
   ]

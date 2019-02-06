@@ -13,13 +13,23 @@ import (
 	"github.com/syaiful6/thatique/shop/auth"
 )
 
-type signinHander struct {
-	*Context
+type signinLimitDispatcher struct {
+	limiter *RateLimiter
 }
 
-func signinDispatcher(ctx *Context, r *http.Request) http.Handler {
-	sgHandler := &signinHander{
+type signinHandler struct {
+	*Context
+	limiter *RateLimiter
+}
+
+func NewSigninLimitDispatcher(n, b int) *signinLimitDispatcher {
+	return &signinLimitDispatcher{NewIpVisitor(n, b)}
+}
+
+func (sd *signinLimitDispatcher) DispatchHTTP(ctx *Context, r *http.Request) http.Handler {
+	sgHandler := &signinHandler{
 		Context: ctx,
+		limiter: sd.limiter,
 	}
 
 	return handlers.MethodHandler{
@@ -28,7 +38,7 @@ func signinDispatcher(ctx *Context, r *http.Request) http.Handler {
 	}
 }
 
-func (sg *signinHander) showSignupForm(w http.ResponseWriter, r *http.Request) {
+func (sg *signinHandler) showSignupForm(w http.ResponseWriter, r *http.Request) {
 	var emailValue string
 
 	sess, err := sersan.GetSession(r)
@@ -52,7 +62,7 @@ func (sg *signinHander) showSignupForm(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (sg *signinHander) renderForm(w http.ResponseWriter, data map[string]interface{}) error {
+func (sg *signinHandler) renderForm(w http.ResponseWriter, data map[string]interface{}) error {
 	tpl, err := sg.App.Template("auth/sign", "base.html", "auth/signin.html")
 	if err != nil {
 		return err
@@ -65,12 +75,18 @@ func (sg *signinHander) renderForm(w http.ResponseWriter, data map[string]interf
 	return nil
 }
 
-func (sg *signinHander) postSignupForm(w http.ResponseWriter, r *http.Request) {
+func (sg *signinHandler) postSignupForm(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		context.GetLogger(sg).Debugf("error encountered when parsing form: %v", err)
 		// this is likely parsing error
 		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	limiter := sg.limiter.Get(r)
+	if limiter.Allow() == false {
+		http.Error(w, http.StatusText(429), http.StatusTooManyRequests)
 		return
 	}
 
