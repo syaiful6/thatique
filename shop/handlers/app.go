@@ -82,6 +82,12 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 
 	app.configureSecret(config)
 
+	tpl404, err := app.Template("404", "base.html", "404.html")
+	if err != nil {
+		return nil, err
+	}
+	app.router.NotFoundHandler = Handler404(tpl404)
+
 	webMiddlewares := &middlewares.IfRequestMiddleware{
 		Predicate: isNotApiRoute,
 		Middlewares: []mux.MiddlewareFunc{
@@ -97,7 +103,7 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 
 	// auth
 	authRouter := app.router.PathPrefix("/auth").Subrouter()
-	authRouter.Handle("", app.dispatch(NewSigninLimitDispatcher(10, 5))).Name("auth.signin")
+	authRouter.Handle("", app.dispatch(NewSigninLimitDispatcher(5, 3))).Name("auth.signin")
 
 	app.router.PathPrefix("/static/").Handler(
 		http.StripPrefix("/static/", http.FileServer(&StaticFs{asset: asset, prefix: "assets/static"})))

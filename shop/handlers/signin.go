@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/syaiful6/sersan"
 	"github.com/syaiful6/thatique/context"
+	"github.com/syaiful6/thatique/pkg/httputil"
 	"github.com/syaiful6/thatique/shop/auth"
 )
 
@@ -84,9 +86,19 @@ func (sg *signinHandler) postSignupForm(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
 	limiter := sg.limiter.Get(r)
 	if limiter.Allow() == false {
-		http.Error(w, http.StatusText(429), http.StatusTooManyRequests)
+		w.WriteHeader(http.StatusTooManyRequests)
+		if err = sg.renderForm(w, map[string]interface{}{
+			"Title":          "Signin",
+			"Description":    "Signin to Thatiq",
+			"Errors":         []string{http.StatusText(429),},
+			csrf.TemplateTag: csrf.TemplateField(r),
+		}); err != nil {
+			sg.App.handleErrorHTML(w, err)
+		}
 		return
 	}
 
@@ -97,6 +109,7 @@ func (sg *signinHandler) postSignupForm(w http.ResponseWriter, r *http.Request) 
 			"Title":          "Signin",
 			"Description":    "Signin to Thatiq",
 			"Email":          email,
+			"Errors":         []string{"email and password harus diisi",},
 			csrf.TemplateTag: csrf.TemplateField(r),
 		}); err != nil {
 			sg.App.handleErrorHTML(w, err)
@@ -105,15 +118,14 @@ func (sg *signinHandler) postSignupForm(w http.ResponseWriter, r *http.Request) 
 	}
 
 	var user *auth.User
-	conn := sg.App.mongo.Copy()
-	defer conn.Close()
-	if err := conn.Find(user, bson.M{"email": email}).One(&user); err != nil {
+	if err := sg.App.mongo.Find(user, bson.M{"email": email}).One(&user); err != nil {
 		if err == mgo.ErrNotFound {
 			auth.NewUser(email, password)
 			if err = sg.renderForm(w, map[string]interface{}{
 				"Title":          "Signin",
 				"Description":    "Signin to Thatiq",
 				"Email":          email,
+				"Errors":         []string{"email atau password tersebut salah",},
 				csrf.TemplateTag: csrf.TemplateField(r),
 			}); err != nil {
 				sg.App.handleErrorHTML(w, err)
@@ -129,6 +141,7 @@ func (sg *signinHandler) postSignupForm(w http.ResponseWriter, r *http.Request) 
 			"Title":          "Signin",
 			"Description":    "Signin to Thatiq",
 			"Email":          email,
+			"Errors":         []string{"email atau password tersebut salah",},
 			csrf.TemplateTag: csrf.TemplateField(r),
 		}); err != nil {
 			sg.App.handleErrorHTML(w, err)
@@ -136,11 +149,16 @@ func (sg *signinHandler) postSignupForm(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	w.Header().Del("Content-Type")
 	redirectURL := r.FormValue("next")
-	if redirectURL != "" {
-		http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
+	if redirectURL == "" {
+		redirectURL = "/"
 	} else {
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		redirectURL, _ = url.QueryUnescape(redirectURL)
 	}
-	return
+
+	if !httputil.IsSameSiteURLPath(redirectURL) {
+		redirectURL = "/"
+	}
+	http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 }

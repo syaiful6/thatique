@@ -74,7 +74,7 @@ func (rl *RateLimiter) add(key string) *rate.Limiter {
 }
 
 func (rl *RateLimiter) cleanup() {
-	ticker := time.NewTicker(1*time.Minute)
+	ticker := time.NewTicker(5*time.Minute)
 	defer func() {
 		ticker.Stop()
 	}()
@@ -96,7 +96,7 @@ func (rl *RateLimiter) cleanup() {
 				rl.visitors = make(map[string]*visitor)
 			}
 			for key, v := range rl.visitors {
-				if time.Now().Sub(v.lastSeen) > 3*time.Minute {
+				if time.Now().Sub(v.lastSeen) > 10*time.Minute {
 					delete(rl.visitors, key)
 				}
 			}
