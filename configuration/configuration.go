@@ -255,7 +255,7 @@ func Parse(rd io.Reader) (*Configuration, error) {
 		return nil, err
 	}
 
-	p := NewParser("thatiq", []VersionedParseInfo{
+	p := NewParser("thatique", []VersionedParseInfo{
 		{
 			Version: MajorMinorVersion(0, 1),
 			ParseAs: reflect.TypeOf(v0_1Configuration{}),

@@ -8,11 +8,16 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: mongodb
       MONGO_INITDB_ROOT_PASSWORD: secret
-    ports:
-      - "27017:27017"
   redis:
     image: redis:4.0.11-alpine
+  thatique:
+    build: .
+    volumes:
+      - ./docker/data:/data
     ports:
-      - "6379:6379"
+      - "8000:8034"
+    depends_on:
+      - db
+      - redis
 volumes:
   mongodata:

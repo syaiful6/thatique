@@ -25,10 +25,15 @@ type signinHandler struct {
 }
 
 func NewSigninLimitDispatcher(n, b int) *signinLimitDispatcher {
-	return &signinLimitDispatcher{NewIpVisitor(n, b)}
+	return &signinLimitDispatcher{NewRateLimiter(n, b, httputil.GetSourceIP)}
 }
 
 func (sd *signinLimitDispatcher) DispatchHTTP(ctx *Context, r *http.Request) http.Handler {
+	authenticator := ctx.App.authenticator
+	// if user already logged in, redirect to homepage
+	if authenticator.User(r) != nil {
+		return http.RedirectHandler("/", http.StatusFound)
+	}
 	sgHandler := &signinHandler{
 		Context: ctx,
 		limiter: sd.limiter,
@@ -94,7 +99,7 @@ func (sg *signinHandler) postSignupForm(w http.ResponseWriter, r *http.Request) 
 		if err = sg.renderForm(w, map[string]interface{}{
 			"Title":          "Signin",
 			"Description":    "Signin to Thatiq",
-			"Errors":         []string{http.StatusText(429),},
+			"Errors":         []string{http.StatusText(429)},
 			csrf.TemplateTag: csrf.TemplateField(r),
 		}); err != nil {
 			sg.App.handleErrorHTML(w, err)
@@ -109,7 +114,7 @@ func (sg *signinHandler) postSignupForm(w http.ResponseWriter, r *http.Request) 
 			"Title":          "Signin",
 			"Description":    "Signin to Thatiq",
 			"Email":          email,
-			"Errors":         []string{"email and password harus diisi",},
+			"Errors":         []string{"email and password harus diisi"},
 			csrf.TemplateTag: csrf.TemplateField(r),
 		}); err != nil {
 			sg.App.handleErrorHTML(w, err)
@@ -125,7 +130,7 @@ func (sg *signinHandler) postSignupForm(w http.ResponseWriter, r *http.Request) 
 				"Title":          "Signin",
 				"Description":    "Signin to Thatiq",
 				"Email":          email,
-				"Errors":         []string{"email atau password tersebut salah",},
+				"Errors":         []string{"email atau password tersebut salah"},
 				csrf.TemplateTag: csrf.TemplateField(r),
 			}); err != nil {
 				sg.App.handleErrorHTML(w, err)
@@ -141,12 +146,17 @@ func (sg *signinHandler) postSignupForm(w http.ResponseWriter, r *http.Request) 
 			"Title":          "Signin",
 			"Description":    "Signin to Thatiq",
 			"Email":          email,
-			"Errors":         []string{"email atau password tersebut salah",},
+			"Errors":         []string{"email atau password tersebut salah"},
 			csrf.TemplateTag: csrf.TemplateField(r),
 		}); err != nil {
 			sg.App.handleErrorHTML(w, err)
 		}
 		return
+	}
+	// check success
+	r, err = sg.App.authenticator.Login(user, r)
+	if err != nil {
+		panic(err)
 	}
 
 	w.Header().Del("Content-Type")

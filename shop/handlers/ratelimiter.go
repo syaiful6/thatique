@@ -11,29 +11,29 @@ import (
 type VisitorKeyFunc func(*http.Request) string
 
 type visitor struct {
-	limiter *rate.Limiter
+	limiter  *rate.Limiter
 	lastSeen time.Time
 }
 
 type RateLimiter struct {
-	limit rate.Limit
-	burst int
+	limit    rate.Limit
+	burst    int
 	visitors map[string]*visitor
-	lock sync.Mutex
-	keyFunc VisitorKeyFunc
-	done chan bool
+	lock     sync.Mutex
+	keyFunc  VisitorKeyFunc
+	done     chan bool
 }
 
 func ipVisitorKeyFunc(r *http.Request) string {
 	return r.RemoteAddr
 }
 
-func NewIpVisitor(n, b int) *RateLimiter {
+func NewRateLimiter(n, b int, fn VisitorKeyFunc) *RateLimiter {
 	rl := &RateLimiter{
-		limit: rate.Every(time.Minute * time.Duration(n)),
-		burst: b,
-		keyFunc: ipVisitorKeyFunc,
-		done: make(chan bool, 1),
+		limit:   rate.Every(time.Minute * time.Duration(n)),
+		burst:   b,
+		keyFunc: fn,
+		done:    make(chan bool, 1),
 	}
 
 	go rl.cleanup()
@@ -74,13 +74,13 @@ func (rl *RateLimiter) add(key string) *rate.Limiter {
 }
 
 func (rl *RateLimiter) cleanup() {
-	ticker := time.NewTicker(5*time.Minute)
+	ticker := time.NewTicker(5 * time.Minute)
 	defer func() {
 		ticker.Stop()
 	}()
 	for {
 		select {
-		case <- rl.done:
+		case <-rl.done:
 			rl.lock.Lock()
 			if rl.visitors == nil {
 				rl.visitors = make(map[string]*visitor)
@@ -90,7 +90,7 @@ func (rl *RateLimiter) cleanup() {
 			}
 			rl.lock.Unlock()
 			return
-		case <- ticker.C:
+		case <-ticker.C:
 			rl.lock.Lock()
 			if rl.visitors == nil {
 				rl.visitors = make(map[string]*visitor)

@@ -76,12 +76,12 @@ func NewAuthenticator(provider UserFinderById) *Authenticator {
 // Middleware that load user from session and set it current user if success
 func (a *Authenticator) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userInfo := a.getUserFromSession(r)
-		if userInfo.IsAnonymous() {
+		user := a.getUserFromSession(r)
+		if user == nil {
 			next.ServeHTTP(w, r)
 			return
 		}
-		next.ServeHTTP(w, a.LoginOnce(userInfo, r))
+		next.ServeHTTP(w, a.LoginOnce(user, r))
 	})
 }
 
@@ -89,7 +89,7 @@ func (a *Authenticator) Middleware(next http.Handler) http.Handler {
 func (a *Authenticator) User(r *http.Request) *User {
 	u, ok := r.Context().Value(UserKey).(*User)
 	if !ok {
-		return &User{}
+		return nil
 	}
 	return u
 }
@@ -101,7 +101,7 @@ func (a *Authenticator) LoginOnce(u *User, r *http.Request) *http.Request {
 
 // login user to application, return http.Request that can be passed to next http.Handler
 // so that user visible.
-func (a *Authenticator) Login(u *User, w http.ResponseWriter, r *http.Request) (*http.Request, error) {
+func (a *Authenticator) Login(u *User, r *http.Request) (*http.Request, error) {
 	sess, err := sersan.GetSession(r)
 	if err != nil {
 		return nil, err
@@ -114,7 +114,7 @@ func (a *Authenticator) Login(u *User, w http.ResponseWriter, r *http.Request) (
 }
 
 // logout user from application, remove userInfoContext if it can
-func (a *Authenticator) Logout(w http.ResponseWriter, r *http.Request) (*http.Request, error) {
+func (a *Authenticator) Logout(r *http.Request) (*http.Request, error) {
 	sess, err := sersan.GetSession(r)
 	if err != nil {
 		return nil, err
@@ -140,23 +140,23 @@ func (a *Authenticator) getUserFromSession(r *http.Request) *User {
 	)
 
 	if err != nil {
-		return &User{}
+		return nil
 	}
 	if suid, ok = sess[UserSessionKey]; !ok {
-		return &User{}
+		return nil
 	}
 
 	if uid, ok = suid.(string); !ok {
-		return &User{}
+		return nil
 	}
 
 	if !bson.IsObjectIdHex(uid) {
-		return &User{}
+		return nil
 	}
 
 	user, err := a.provider.FindUserById(bson.ObjectIdHex(uid))
 	if err != nil {
-		return &User{}
+		return nil
 	}
 
 	return user

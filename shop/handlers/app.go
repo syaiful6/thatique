@@ -104,6 +104,7 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 	// auth
 	authRouter := app.router.PathPrefix("/auth").Subrouter()
 	authRouter.Handle("", app.dispatch(NewSigninLimitDispatcher(5, 3))).Name("auth.signin")
+	authRouter.Handle("/logout", app.dispatchFunc(signoutDispatcher)).Name("auth.signout")
 
 	app.router.PathPrefix("/static/").Handler(
 		http.StripPrefix("/static/", http.FileServer(&StaticFs{asset: asset, prefix: "assets/static"})))

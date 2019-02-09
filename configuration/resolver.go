@@ -12,15 +12,15 @@ func Resolve(args []string) (*Configuration, error) {
 		err               error
 	)
 
-	defaultPath, err := filepath.Abs("./thatiq-config.yml")
+	defaultPath, err := filepath.Abs("./thatique-config.yml")
 	fmt.Printf("absolute path in %s\n", defaultPath)
 	if err != nil {
 		defaultPath = ""
 	}
 	if len(args) > 0 {
 		configurationPath = args[0]
-	} else if os.Getenv("THATIQ_CONFIGURATION_PATH") != "" {
-		configurationPath = os.Getenv("THATIQ_CONFIGURATION_PATH")
+	} else if os.Getenv("THATIQUE_CONFIGURATION_PATH") != "" {
+		configurationPath = os.Getenv("THATIQUE_CONFIGURATION_PATH")
 	} else if len(defaultPath) > 0 {
 		if _, err = os.Stat(defaultPath); err == nil {
 			configurationPath = defaultPath

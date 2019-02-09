@@ -105,7 +105,7 @@ func (oa *OAuth2LoginHandler) HandleCallback(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	nr, err := oa.Login(user, w, r)
+	nr, err := oa.Login(user, r)
 	if err != nil {
 		oa.ErrorHandler.ServeHTTP(w, contextSave(r, OAuth2ContextErrKey, err))
 		return

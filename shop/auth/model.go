@@ -1,9 +1,6 @@
 package auth
 
 import (
-	"encoding/base64"
-	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/globalsign/mgo/bson"
@@ -18,22 +15,13 @@ type Profile struct {
 }
 
 type User struct {
-	Id        bson.ObjectId `bson:"_id,omitempty"`
-	Profile   Profile       `bson:"profile"`
-	Email     string        `bson:"email"`
-	Password  string        `bson:"password"`
-	Superuser bool          `bson:"is_superuser"`
-	Staff     bool          `bson:"is_staff"`
-	CreatedAt time.Time     `bson:"created_at"`
-}
-
-type SerializeUser struct {
-	Id        string    `json:"id"`
-	Profile   Profile   `json:"profile"`
-	Email     string    `json:"email"`
-	Superuser bool      `json:"is_superuser"`
-	Staff     bool      `json:"is_staff"`
-	CreatedAt time.Time `json:"created_at"`
+	Id        bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	Profile   Profile       `bson:"profile" json:"profile,omitempty"`
+	Email     string        `bson:"email" json:"email"`
+	Password  []byte        `bson:"password" json:"-"`
+	Superuser bool          `bson:"is_superuser" json:"is_superuser"`
+	Staff     bool          `bson:"is_staff" json:"is_staff"`
+	CreatedAt time.Time     `bson:"created_at" json:"created_at"`
 }
 
 type OAuthProvider struct {
@@ -44,20 +32,16 @@ type OAuthProvider struct {
 }
 
 func NewUser(email, password string) (*User, error) {
-	b, err := bcrypt.GenerateFromPassword([]byte(password), 11)
-	if err != nil {
-		return nil, fmt.Errorf("error bcrypting password: %v", err)
-	}
-
-	str := base64.URLEncoding.EncodeToString(b)
-
-	return &User{
+	user := &User{
 		Email:     email,
-		Password:  str,
 		Superuser: false,
 		Staff:     false,
 		CreatedAt: time.Now().UTC(),
-	}, nil
+	}
+	if err := user.SetPassword([]byte(password)); err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
 func (u *User) CollectionName() string {
@@ -79,31 +63,21 @@ func (u *User) Unique() bson.M {
 func (u *User) Presave() {
 }
 
-func (user *User) VerifyPassword(pswd string) bool {
-	b, err := base64.URLEncoding.DecodeString(user.Password)
+func (user *User) SetPassword(pswd []byte) error {
+	b, err := bcrypt.GenerateFromPassword(pswd, 11)
 	if err != nil {
-		return false
+		return err
 	}
-	if err := bcrypt.CompareHashAndPassword(b, []byte(pswd)); err != nil {
+	user.Password = b[:]
+	return nil
+}
+
+func (user *User) VerifyPassword(pswd string) bool {
+	if err := bcrypt.CompareHashAndPassword(user.Password, []byte(pswd)); err != nil {
 		return false
 	}
 
 	return true
-}
-
-func (user *User) IsAnonymous() bool {
-	return len(user.Id) == 0
-}
-
-func (user *User) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&SerializeUser{
-		Id:        user.Id.Hex(),
-		Profile:   user.Profile,
-		Email:     user.Email,
-		Superuser: user.Superuser,
-		Staff:     user.Staff,
-		CreatedAt: user.CreatedAt,
-	})
 }
 
 func (p *OAuthProvider) CollectionName() string {

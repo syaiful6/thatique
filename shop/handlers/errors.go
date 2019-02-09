@@ -11,7 +11,7 @@ func Handler404(tpl *template.Template) http.Handler {
 		w.WriteHeader(http.StatusNotFound)
 		if err := tpl.Execute(w, map[string]interface{}{
 			"Title":       "404: Page Not Found",
-				"Description": "This is not the web page you are looking for",
+			"Description": "This is not the web page you are looking for",
 		}); err != nil {
 			panic(err)
 		}
