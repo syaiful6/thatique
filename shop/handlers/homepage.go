@@ -31,9 +31,11 @@ func (h *homepageHandler) getHomepage(w http.ResponseWriter, r *http.Request) {
 		h.App.handleErrorHTML(w, err)
 		return
 	}
+	user := h.App.authenticator.User(r)
 	if err = tpl.Execute(w, map[string]interface{}{
 		"Title":       "Thatiq",
 		"Description": "Executive",
+		"User":        user,
 	}); err != nil {
 		context.GetLogger(h).Debugf("unexpected error when executing homepage.html: %v", err)
 		h.App.handleErrorHTML(w, err)

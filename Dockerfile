@@ -39,4 +39,4 @@ VOLUME ["/data"]
 
 ENTRYPOINT ["tini", "--"]
 
-CMD thatique serve
+CMD thatique server

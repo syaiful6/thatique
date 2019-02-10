@@ -194,7 +194,7 @@ func (p *Parser) overwriteStruct(v reflect.Value, fullpath string, path []string
 	}
 
 	fieldIndex, present := byUpperCase[path[0]]
-	if !present {
+	if !present && fullpath != "THATIQUE_CONFIGURATION_PATH" {
 		logrus.Warnf("Ignoring unrecognized environment variable %s", fullpath)
 		return nil
 	}

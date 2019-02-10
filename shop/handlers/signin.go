@@ -141,6 +141,27 @@ func (sg *signinHandler) postSignupForm(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// check if this user is locked out
+	if !user.IsActive() {
+		var errorMsg string
+		if user.Status == auth.UserStatusInActive {
+			errorMsg = "Your account status is inactive, verify your email."
+		} else {
+			errorMsg = "your account status is locked out"
+		}
+
+		if err = sg.renderForm(w, map[string]interface{}{
+			"Title":          "Signin",
+			"Description":    "Signin to Thatiq",
+			"Email":          email,
+			"Errors":         []string{errorMsg},
+			csrf.TemplateTag: csrf.TemplateField(r),
+		}); err != nil {
+			sg.App.handleErrorHTML(w, err)
+		}
+		return
+	}
+
 	if !user.VerifyPassword(password) {
 		if err = sg.renderForm(w, map[string]interface{}{
 			"Title":          "Signin",

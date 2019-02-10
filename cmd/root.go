@@ -14,6 +14,7 @@ func init() {
 	RootCmd.AddCommand(shop.ServeCmd)
 
 	// secret
+	secretKeyGenerate.Flags().BoolVarP(&secretKey64Len, "long", "L", false, "Generate the 64 bytes key version")
 	secretKeyCommand.AddCommand(secretKeyGenerate)
 	RootCmd.AddCommand(secretKeyCommand)
 
@@ -24,9 +25,9 @@ func init() {
 var showVersion bool
 
 var RootCmd = &cobra.Command{
-	Use:   "shop",
-	Short: "Thatiq's shop",
-	Long:  "Thatiq's shop",
+	Use:   "Thatique",
+	Short: "Thatique's CLI application to manage thatique server",
+	Long:  `Thatique's CLI application to manage thatique server.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if showVersion {
 			version.PrintVersion()

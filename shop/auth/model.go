@@ -7,6 +7,29 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type UserStatus string
+
+const (
+	UserStatusInActive UserStatus = "inactive"
+	UserStatusActive   UserStatus = "active"
+	UserStatusLocked   UserStatus = "locked"
+)
+
+func (st UserStatus) GetBSON() (interface{}, error) {
+	return string(st), nil
+}
+
+func (st *UserStatus) SetBSON(raw bson.Raw) error {
+	var status string
+	err := raw.Unmarshal(&status)
+	if err != nil {
+		return err
+	}
+
+	*st = UserStatus(status)
+	return nil
+}
+
 type Profile struct {
 	Name    string `bson:"name,omitempty" json:"name,omitempty"`
 	Picture string `bson:"picture,omitempty" json:"picture"`
@@ -19,6 +42,7 @@ type User struct {
 	Profile   Profile       `bson:"profile" json:"profile,omitempty"`
 	Email     string        `bson:"email" json:"email"`
 	Password  []byte        `bson:"password" json:"-"`
+	Status    UserStatus    `bson:"status" json:"status"`
 	Superuser bool          `bson:"is_superuser" json:"is_superuser"`
 	Staff     bool          `bson:"is_staff" json:"is_staff"`
 	CreatedAt time.Time     `bson:"created_at" json:"created_at"`
@@ -64,6 +88,10 @@ func (u *User) Presave() {
 	if u.CreatedAt.IsZero() {
 		u.CreatedAt = time.Now().UTC()
 	}
+
+	if len(u.Status) == 0 {
+		u.Status = UserStatusActive
+	}
 }
 
 func (user *User) SetPassword(pswd []byte) error {
@@ -83,6 +111,10 @@ func (user *User) VerifyPassword(pswd string) bool {
 	return true
 }
 
+func (user *User) IsActive() bool {
+	return user.Status == UserStatusActive
+}
+
 func (p *OAuthProvider) CollectionName() string {
 	return "oauth_providers"
 }
@@ -95,5 +127,5 @@ func (p *OAuthProvider) Unique() bson.M {
 	return bson.M{"name": p.Name, "key": p.Key}
 }
 
-func (p *OAuthProvider) PreSave() {
+func (p *OAuthProvider) Presave() {
 }

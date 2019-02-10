@@ -4,6 +4,7 @@ import (
 	"context"
 	cryptorand "crypto/rand"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -63,8 +64,12 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 	if err != nil {
 		return nil, err
 	}
-	sessionstate := sersan.NewServerSessionState(sersanstore,
-		createSecretKeys(config.HTTP.SessionKeys...)...)
+
+	sessionKeys := createSecretKeys(config.HTTP.SessionKeys...)
+	if len(sessionKeys) == 0 {
+		return nil, errors.New("http session keys must not be empty.")
+	}
+	sessionstate := sersan.NewServerSessionState(sersanstore, sessionKeys...)
 	sessionstate.AuthKey = auth.UserSessionKey
 	sessionstate.Options.Secure = config.HTTP.Secure
 

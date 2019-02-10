@@ -38,8 +38,12 @@
             </div>
 
             <div class="sh-navbar-right">
-              <a href="/toko" class="sh-navbar-item">About</a>
-              <a class="sh-navbar-btn sh-btn" href="/auth" id="signin-button"><span>Sign in</span></a>
+              {{ if .User }}
+                <a class="sh-navbar-item" href="/dashboard"><span>Dashboard</span></a>
+                <a class="sh-navbar-btn sh-btn" href="/auth/logout" id="signout-button"><span>Log out</span></a>
+              {{ else }}
+                <a class="sh-navbar-btn sh-btn" href="/auth" id="signin-button"><span>Sign in</span></a>
+              {{ end }}
             </div>
           </nav>
         </div>

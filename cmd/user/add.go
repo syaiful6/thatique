@@ -7,51 +7,43 @@ import (
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"github.com/syaiful6/thatique/configuration"
-	"github.com/syaiful6/thatique/pkg/emailparser"
 	"github.com/syaiful6/thatique/shop/auth"
 	"github.com/syaiful6/thatique/shop/db"
 )
 
-func promptPassword(label string) (string, error) {
-	passwordValidator := func(input string) error {
-		// if this for superuser, then the password's length must be
-		// at least 15
-		if Superuser && len(input) < 15 {
-			return fmt.Errorf("superuser's password must be at least 15 length")
-		}
+func promptProfileName() (string, error) {
+	var defaultName string
+	defaultName = os.Getenv("USER")
+	if len(defaultName) == 0 {
+		defaultName = os.Getenv("USERNAME")
+	}
 
-		if len(input) < 8 {
-			return fmt.Errorf("password must be at least 8 length")
+	var validator = func(input string) error {
+		if input == "" {
+			return fmt.Errorf("name can't be empty")
 		}
-
 		return nil
 	}
 
-	passwordPrompt := promptui.Prompt{
-		Label:    label,
-		Validate: passwordValidator,
+	profileNamePrompt := promptui.Prompt{
+		Default: defaultName,
+		Label:   "Name",
+		Validate: validator,
 	}
 
-	return passwordPrompt.Run()
+	return profileNamePrompt.Run()
 }
 
 var userAddCommand = &cobra.Command{
 	Use:   "add",
 	Short: "add a user to thatique application",
 	Long: `add a user to thatique application, if email your provided already
-	in use, then this command will report the error.`,
-	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) != 1 {
-			return fmt.Errorf("user add require exactly one argument")
-		}
+in use, then this command will report the error.
 
-		_, err := emailparser.NewEmail(args[0])
-		if err != nil {
-			return fmt.Errorf("the argument passed to `user add` must be an email")
-		}
-
-		return nil
-	},
+Flags:
+-s flag to create a superuser
+-S flag to create a staff`,
+	Args: ArgEmailValidator,
 	Run: func(cmd *cobra.Command, args []string) {
 		email := args[0]
 
@@ -73,17 +65,30 @@ var userAddCommand = &cobra.Command{
 			Superuser: Superuser,
 			Staff:     Staff,
 		}
+
+		// Superuser is always staff
+		if Superuser {
+			user.Staff = true
+		}
 		if mongodb.Exists(user) {
 			fmt.Fprintf(os.Stderr, "User with email %s already exists", email)
 			return
 		}
 
-		pswd1, err := promptPassword("Password")
+		name, err := promptProfileName()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Invalid user's profile name: %v \n", err)
+			return
+		}
+
+		user.Profile = auth.Profile{Name: name,}
+
+		pswd1, err := promptPassword("Password", user.Staff)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Invalid password %v \n", err)
 			return
 		}
-		pswd2, err := promptPassword("Confirm Password")
+		pswd2, err := promptPassword("Confirm Password", user.Staff)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Invalid password %v", err)
 			return

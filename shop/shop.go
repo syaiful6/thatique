@@ -32,9 +32,10 @@ var quit = make(chan os.Signal, 1)
 
 // ServeCmd is a cobra command for running the registry.
 var ServeCmd = &cobra.Command{
-	Use:   "serve <config>",
-	Short: "`serve` the application",
-	Long:  "`serve` run the shop http server and start sell",
+	Use:   "server <config>",
+	Short: "`Run Thatique's HTTP server",
+	Long:  `Run Thatique's HTTP server. If you give it path to configuration.yml then it will
+use it. Otherwise it try to load configuration from THATIQUE_CONFIGURATION_PATH.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := scontext.WithVersion(scontext.Background(), version.Version)
 
