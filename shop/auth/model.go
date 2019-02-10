@@ -61,6 +61,9 @@ func (u *User) Unique() bson.M {
 }
 
 func (u *User) Presave() {
+	if u.CreatedAt.IsZero() {
+		u.CreatedAt = time.Now().UTC()
+	}
 }
 
 func (user *User) SetPassword(pswd []byte) error {
@@ -68,7 +71,7 @@ func (user *User) SetPassword(pswd []byte) error {
 	if err != nil {
 		return err
 	}
-	user.Password = b[:]
+	user.Password = b
 	return nil
 }
 

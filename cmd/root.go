@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/syaiful6/thatique/cmd/user"
 	"github.com/syaiful6/thatique/shop"
 	"github.com/syaiful6/thatique/version"
 )
@@ -15,6 +16,9 @@ func init() {
 	// secret
 	secretKeyCommand.AddCommand(secretKeyGenerate)
 	RootCmd.AddCommand(secretKeyCommand)
+
+	// user
+	RootCmd.AddCommand(user.UserCommand)
 }
 
 var showVersion bool

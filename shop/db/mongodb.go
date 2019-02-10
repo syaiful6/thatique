@@ -19,7 +19,7 @@ type OrderedModel interface {
 type Updatable interface {
 	Model
 	Unique() bson.M
-	PreSave()
+	Presave()
 }
 
 type MongoConn struct {
@@ -80,7 +80,7 @@ func (conn *MongoConn) Exists(u Updatable) bool {
 }
 
 func (conn *MongoConn) Upsert(u Updatable) (info *mgo.ChangeInfo, err error) {
-	u.PreSave()
+	u.Presave()
 	return conn.Cursor(u.(Model)).Upsert(u.Unique(), u)
 }
 
