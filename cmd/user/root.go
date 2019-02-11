@@ -60,6 +60,24 @@ func promptPassword(label string, staff bool) (string, error) {
 	return passwordPrompt.Run()
 }
 
+func promptConfirmPassword(label, password string) (string, error) {
+	passwordValidator := func(input string) error {
+		if input != password {
+			return errors.New("password and confirmation password is not equal")
+		}
+
+		return nil
+	}
+
+	passwordPrompt := promptui.Prompt{
+		Label:    label,
+		Validate: passwordValidator,
+		Mask:     '*',
+	}
+
+	return passwordPrompt.Run()
+}
+
 var UserCommand = &cobra.Command{
 	Use:   "user",
 	Short: "user related command line utility",

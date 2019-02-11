@@ -51,14 +51,9 @@ password workflow.`,
 			fmt.Fprintf(os.Stderr, "Invalid password %v \n", err)
 			return
 		}
-		pswd2, err := promptPassword("Confirm Password", user.Staff)
+		pswd2, err := promptConfirmPassword("Confirm Password", pswd1)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Invalid password %v", err)
-			return
-		}
-
-		if pswd1 != pswd2 {
-			fmt.Fprintf(os.Stderr, "password and confirmation password is not equal")
 			return
 		}
 

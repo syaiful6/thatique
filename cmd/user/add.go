@@ -3,6 +3,7 @@ package user
 import (
 	"fmt"
 	"os"
+	osuser "os/user"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
@@ -13,9 +14,10 @@ import (
 
 func promptProfileName() (string, error) {
 	var defaultName string
-	defaultName = os.Getenv("USER")
+	user := osuser.Current()
+	defaultName = user.Name
 	if len(defaultName) == 0 {
-		defaultName = os.Getenv("USERNAME")
+		defaultName = user.Username
 	}
 
 	var validator = func(input string) error {
@@ -26,9 +28,9 @@ func promptProfileName() (string, error) {
 	}
 
 	profileNamePrompt := promptui.Prompt{
-		Default: defaultName,
 		Label:   "Name",
 		Validate: validator,
+		Default: defaultName,
 	}
 
 	return profileNamePrompt.Run()
@@ -88,14 +90,9 @@ Flags:
 			fmt.Fprintf(os.Stderr, "Invalid password %v \n", err)
 			return
 		}
-		pswd2, err := promptPassword("Confirm Password", user.Staff)
+		pswd2, err := promptConfirmPassword("Confirm Password", pswd1)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Invalid password %v", err)
-			return
-		}
-
-		if pswd1 != pswd2 {
-			fmt.Fprintf(os.Stderr, "password and confirmation password is not equal")
 			return
 		}
 
