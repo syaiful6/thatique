@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"github.com/manifoldco/promptui"
+	"github.com/spf13/cobra"
 	"github.com/syaiful6/thatique/pkg/emailparser"
 )
 

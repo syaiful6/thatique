@@ -13,7 +13,7 @@ import (
 )
 
 var changePasswordCommand = &cobra.Command{
-	Use: "changepassword [useremail]",
+	Use:   "changepassword [useremail]",
 	Short: "Change user's password",
 	Long: `Change user's password used for authentication. Without normal change
 password workflow.`,
@@ -21,7 +21,7 @@ password workflow.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		email := args[0]
 
-		var args1  []string
+		var args1 []string
 		config, err := configuration.Resolve(args1)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "configuration err: %v \n", err)
@@ -35,7 +35,7 @@ password workflow.`,
 		}
 
 		var user *auth.User
-		if err = mongodb.Find(user, bson.M{"email": email,}).One(&user); err != nil {
+		if err = mongodb.Find(user, bson.M{"email": email}).One(&user); err != nil {
 			if err == mgo.ErrNotFound {
 				fmt.Fprintf(os.Stderr, "there are no user with %s email", email)
 				return

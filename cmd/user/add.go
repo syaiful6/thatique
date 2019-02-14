@@ -29,8 +29,8 @@ func promptProfileName() (string, error) {
 
 	profileNamePrompt := promptui.Prompt{
 		Label:   "Name",
+		Default:  defaultName,
 		Validate: validator,
-		Default: defaultName,
 	}
 
 	return profileNamePrompt.Run()
@@ -49,7 +49,7 @@ Flags:
 	Run: func(cmd *cobra.Command, args []string) {
 		email := args[0]
 
-		var args1  []string
+		var args1 []string
 		config, err := configuration.Resolve(args1)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "configuration err: %v \n", err)
@@ -83,7 +83,7 @@ Flags:
 			return
 		}
 
-		user.Profile = auth.Profile{Name: name,}
+		user.Profile = auth.Profile{Name: name}
 
 		pswd1, err := promptPassword("Password", user.Staff)
 		if err != nil {

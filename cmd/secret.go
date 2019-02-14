@@ -23,7 +23,7 @@ var secretKeyCommand = &cobra.Command{
 var secretKeyGenerate = &cobra.Command{
 	Use:   "generate",
 	Short: "generate secret key",
-	Long:  `generate secret key, 32 or 64 bytes length. To generate 64 bytes key
+	Long: `generate secret key, 32 or 64 bytes length. To generate 64 bytes key
 use flag -L.
 `,
 	Run: func(cmd *cobra.Command, args []string) {

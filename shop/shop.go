@@ -34,7 +34,7 @@ var quit = make(chan os.Signal, 1)
 var ServeCmd = &cobra.Command{
 	Use:   "server <config>",
 	Short: "`Run Thatique's HTTP server",
-	Long:  `Run Thatique's HTTP server. If you give it path to configuration.yml then it will
+	Long: `Run Thatique's HTTP server. If you give it path to configuration.yml then it will
 use it. Otherwise it try to load configuration from THATIQUE_CONFIGURATION_PATH.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := scontext.WithVersion(scontext.Background(), version.Version)
