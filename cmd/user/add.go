@@ -28,7 +28,7 @@ func promptProfileName() (string, error) {
 	}
 
 	profileNamePrompt := promptui.Prompt{
-		Label:   "Name",
+		Label:    "Name",
 		Default:  defaultName,
 		Validate: validator,
 	}
