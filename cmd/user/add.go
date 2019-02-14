@@ -14,10 +14,12 @@ import (
 
 func promptProfileName() (string, error) {
 	var defaultName string
-	user := osuser.Current()
-	defaultName = user.Name
-	if len(defaultName) == 0 {
-		defaultName = user.Username
+	user, err := osuser.Current()
+	if err == nil {
+		defaultName = user.Name
+		if len(defaultName) == 0 {
+			defaultName = user.Username
+		}
 	}
 
 	var validator = func(input string) error {
