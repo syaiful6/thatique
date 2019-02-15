@@ -2,11 +2,11 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/globalsign/mgo/bson"
 	"github.com/syaiful6/sersan"
-	"github.com/syaiful6/thatique/shop/db"
 )
 
 const (
@@ -42,32 +42,12 @@ func (uic userInfoContext) Value(key interface{}) interface{} {
 	return uic.Context.Value(key)
 }
 
-type UserFinderById interface {
-	FindUserById(bson.ObjectId) (*User, error)
-}
-
-type MgoUserProvider struct {
-	conn *db.MongoConn
-}
-
-func NewMgoUserProvider(conn *db.MongoConn) *MgoUserProvider {
-	return &MgoUserProvider{conn: conn}
-}
-
-func (p *MgoUserProvider) FindUserById(id bson.ObjectId) (*User, error) {
-	var user *User
-	if err := p.conn.Find(user, bson.M{"_id": id}).One(&user); err != nil {
-		return nil, err
-	}
-	return user, nil
-}
-
-// authenticator
+// authenticator for the web
 type Authenticator struct {
-	provider UserFinderById
+	provider FinderById
 }
 
-func NewAuthenticator(provider UserFinderById) *Authenticator {
+func NewAuthenticator(provider FinderById) *Authenticator {
 	return &Authenticator{
 		provider: provider,
 	}
@@ -102,14 +82,13 @@ func (a *Authenticator) LoginOnce(u *User, r *http.Request) *http.Request {
 // login user to application, return http.Request that can be passed to next http.Handler
 // so that user visible.
 func (a *Authenticator) Login(u *User, r *http.Request) (*http.Request, error) {
-	sess, err := sersan.GetSession(r)
-	if err != nil {
-		return nil, err
+	if u == nil {
+		return r, errors.New("user passed to login can't be nil user")
 	}
-
-	// save the user id to session
-	sess[UserSessionKey] = u.Id.Hex()
-
+	err := a.updateSession(u, r)
+	if err != nil {
+		return r, err
+	}
 	return a.LoginOnce(u, r), nil
 }
 
@@ -129,6 +108,17 @@ func (a *Authenticator) Logout(r *http.Request) (*http.Request, error) {
 	}
 
 	return r.WithContext(ctx.Context), nil
+}
+
+// update session
+func (a *Authenticator) updateSession(user *User, r *http.Request) error {
+	sess, err := sersan.GetSession(r)
+	if err != nil {
+		return err
+	}
+
+	sess[UserSessionKey] = user.Id.Hex()
+	return nil
 }
 
 func (a *Authenticator) getUserFromSession(r *http.Request) *User {
@@ -154,7 +144,7 @@ func (a *Authenticator) getUserFromSession(r *http.Request) *User {
 		return nil
 	}
 
-	user, err := a.provider.FindUserById(bson.ObjectIdHex(uid))
+	user, err := a.provider.FindById(bson.ObjectIdHex(uid))
 	if err != nil {
 		return nil
 	}

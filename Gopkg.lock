@@ -262,6 +262,17 @@
   version = "v0.0.4"
 
 [[projects]]
+  digest = "1:be88a46cd36136d9a0fbe8f42dffc269a62544e3a12ff3b047b4704f9b349b42"
+  name = "github.com/mozillazg/go-unidecode"
+  packages = [
+    ".",
+    "table",
+  ]
+  pruneopts = "UT"
+  revision = "7ab3c72180eeb79ccb8746137e14d6b0a60dd685"
+  version = "v0.1.0"
+
+[[projects]]
   digest = "1:07140002dbf37da92090f731b46fa47be4820b82fe5c14a035203b0e813d0ec2"
   name = "github.com/nicksnyder/go-i18n"
   packages = [
@@ -453,6 +464,7 @@
     "github.com/gorilla/mux",
     "github.com/gorilla/securecookie",
     "github.com/manifoldco/promptui",
+    "github.com/mozillazg/go-unidecode",
     "github.com/sirupsen/logrus",
     "github.com/spf13/cobra",
     "github.com/syaiful6/sersan",

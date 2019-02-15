@@ -4,8 +4,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/globalsign/mgo"
-	"github.com/globalsign/mgo/bson"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/handlers"
 
@@ -17,15 +15,20 @@ import (
 
 type signinLimitDispatcher struct {
 	limiter *RateLimiter
+	repo    auth.FinderByEmail
 }
 
 type signinHandler struct {
 	*Context
+	repo    auth.FinderByEmail
 	limiter *RateLimiter
 }
 
-func NewSigninLimitDispatcher(n, b int) *signinLimitDispatcher {
-	return &signinLimitDispatcher{NewRateLimiter(n, b, httputil.GetSourceIP)}
+func NewSigninLimitDispatcher(repo auth.FinderByEmail, n, b int) *signinLimitDispatcher {
+	return &signinLimitDispatcher{
+		limiter: NewRateLimiter(n, b, httputil.GetSourceIP),
+		repo:    repo,
+	}
 }
 
 func (sd *signinLimitDispatcher) DispatchHTTP(ctx *Context, r *http.Request) http.Handler {
@@ -36,6 +39,7 @@ func (sd *signinLimitDispatcher) DispatchHTTP(ctx *Context, r *http.Request) htt
 	}
 	sgHandler := &signinHandler{
 		Context: ctx,
+		repo:    sd.repo,
 		limiter: sd.limiter,
 	}
 
@@ -107,14 +111,19 @@ func (sg *signinHandler) postSignupForm(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	email := r.FormValue("email")
-	password := r.FormValue("password")
-	if len(email) == 0 || len(password) == 0 {
+	form := &auth.SigninForm{
+		Finder:   sg.repo,
+		Email:    r.FormValue("email"),
+		Password: r.FormValue("password"),
+	}
+
+	user, errs, ok := form.Validate()
+	if !ok {
 		if err = sg.renderForm(w, map[string]interface{}{
 			"Title":          "Signin",
 			"Description":    "Signin to Thatiq",
-			"Email":          email,
-			"Errors":         []string{"email and password harus diisi"},
+			"Email":          form.Email,
+			"Errors":         sg.toSlice(errs),
 			csrf.TemplateTag: csrf.TemplateField(r),
 		}); err != nil {
 			sg.App.handleErrorHTML(w, err)
@@ -122,58 +131,6 @@ func (sg *signinHandler) postSignupForm(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	var user *auth.User
-	if err := sg.App.mongo.Find(user, bson.M{"email": email}).One(&user); err != nil {
-		if err == mgo.ErrNotFound {
-			auth.NewUser(email, password)
-			if err = sg.renderForm(w, map[string]interface{}{
-				"Title":          "Signin",
-				"Description":    "Signin to Thatiq",
-				"Email":          email,
-				"Errors":         []string{"email atau password tersebut salah"},
-				csrf.TemplateTag: csrf.TemplateField(r),
-			}); err != nil {
-				sg.App.handleErrorHTML(w, err)
-			}
-			return
-		}
-		sg.App.handleErrorHTML(w, err)
-		return
-	}
-
-	// check if this user is locked out
-	if !user.IsActive() {
-		var errorMsg string
-		if user.Status == auth.UserStatusInActive {
-			errorMsg = "Your account status is inactive, verify your email."
-		} else {
-			errorMsg = "your account status is locked out"
-		}
-
-		if err = sg.renderForm(w, map[string]interface{}{
-			"Title":          "Signin",
-			"Description":    "Signin to Thatiq",
-			"Email":          email,
-			"Errors":         []string{errorMsg},
-			csrf.TemplateTag: csrf.TemplateField(r),
-		}); err != nil {
-			sg.App.handleErrorHTML(w, err)
-		}
-		return
-	}
-
-	if !user.VerifyPassword(password) {
-		if err = sg.renderForm(w, map[string]interface{}{
-			"Title":          "Signin",
-			"Description":    "Signin to Thatiq",
-			"Email":          email,
-			"Errors":         []string{"email atau password tersebut salah"},
-			csrf.TemplateTag: csrf.TemplateField(r),
-		}); err != nil {
-			sg.App.handleErrorHTML(w, err)
-		}
-		return
-	}
 	// check success
 	r, err = sg.App.authenticator.Login(user, r)
 	if err != nil {
@@ -192,4 +149,13 @@ func (sg *signinHandler) postSignupForm(w http.ResponseWriter, r *http.Request) 
 		redirectURL = "/"
 	}
 	http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
+}
+
+func (sg *signinHandler) toSlice(m map[string]string) []string {
+	var xs []string
+	for _, v := range m {
+		xs = append(xs, v)
+	}
+
+	return xs
 }

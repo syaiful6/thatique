@@ -73,7 +73,8 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 	sessionstate.AuthKey = auth.UserSessionKey
 	sessionstate.Options.Secure = config.HTTP.Secure
 
-	authenticator := auth.NewAuthenticator(auth.NewMgoUserProvider(mongodb))
+	userRepo := auth.NewMgoRepository(mongodb)
+	authenticator := auth.NewAuthenticator(userRepo)
 	app := &App{
 		renderer:      newTemplateRenderer(asset),
 		Config:        config,
@@ -108,7 +109,7 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 
 	// auth
 	authRouter := app.router.PathPrefix("/auth").Subrouter()
-	authRouter.Handle("", app.dispatch(NewSigninLimitDispatcher(5, 3))).Name("auth.signin")
+	authRouter.Handle("", app.dispatch(NewSigninLimitDispatcher(userRepo, 5, 3))).Name("auth.signin")
 	authRouter.Handle("/logout", app.dispatchFunc(signoutDispatcher)).Name("auth.signout")
 
 	app.router.PathPrefix("/static/").Handler(

@@ -1,16 +1,21 @@
 package auth
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/globalsign/mgo/bson"
+	"github.com/syaiful6/thatique/pkg/emailparser"
+	"github.com/syaiful6/thatique/pkg/text"
+	"github.com/syaiful6/thatique/shop/db"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type UserStatus string
 
 const (
-	UserStatusInActive UserStatus = "inactive"
+	UserStatusInactive UserStatus = "inactive"
 	UserStatusActive   UserStatus = "active"
 	UserStatusLocked   UserStatus = "locked"
 )
@@ -26,6 +31,13 @@ func (st *UserStatus) SetBSON(raw bson.Raw) error {
 		return err
 	}
 
+	status = strings.ToLower(status)
+	switch status {
+	case "inactive", "active", "locked":
+	default:
+		return fmt.Errorf("Invalid user status %s must be one of [inactive, active, locked]", status)
+	}
+
 	*st = UserStatus(status)
 	return nil
 }
@@ -39,6 +51,7 @@ type Profile struct {
 
 type User struct {
 	Id        bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	Slug      string        `bson:"slug"`
 	Profile   Profile       `bson:"profile" json:"profile,omitempty"`
 	Email     string        `bson:"email" json:"email"`
 	Password  []byte        `bson:"password" json:"-"`
@@ -53,6 +66,43 @@ type OAuthProvider struct {
 	Name string        `bson:"name"`
 	Key  string        `bson:"key"`
 	User bson.ObjectId `bson:"user"`
+}
+
+type FinderById interface {
+	FindById(bson.ObjectId) (*User, error)
+}
+
+type FinderByEmail interface {
+	FindByEmail(string) (*User, error)
+}
+
+type Repository interface {
+	FinderById
+	FinderByEmail
+}
+
+type MgoRepository struct {
+	conn *db.MongoConn
+}
+
+func NewMgoRepository(conn *db.MongoConn) *MgoRepository {
+	return &MgoRepository{conn: conn}
+}
+
+func (m *MgoRepository) FindById(id bson.ObjectId) (*User, error) {
+	var user *User
+	if err := m.conn.Find(user, bson.M{"_id": id}).One(&user); err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (m *MgoRepository) FindByEmail(email string) (*User, error) {
+	var user *User
+	if err := m.conn.Find(user, bson.M{"email": email}).One(&user); err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
 func NewUser(email, password string) (*User, error) {
@@ -87,6 +137,15 @@ func (u *User) Unique() bson.M {
 func (u *User) Presave() {
 	if u.CreatedAt.IsZero() {
 		u.CreatedAt = time.Now().UTC()
+	}
+
+	if u.Slug == "" {
+		if u.Profile.Name != "" {
+			u.Slug = text.Slugify(u.Profile.Name)
+		} else {
+			email, _ := emailparser.NewEmail(u.Email)
+			u.Slug = text.Slugify(email.Local())
+		}
 	}
 
 	if len(u.Status) == 0 {
