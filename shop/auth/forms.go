@@ -27,13 +27,6 @@ func (form *SigninForm) Validate() (user *User, err map[string]string, ok bool) 
 		return
 	}
 
-	if !user.VerifyPassword(form.Password) {
-		ok = false
-		err["email_password"] = "your email or password is incorrect"
-		ok = false
-		return
-	}
-
 	if !user.IsActive() {
 		var msg string
 		if user.Status == UserStatusInactive {
@@ -43,6 +36,13 @@ func (form *SigninForm) Validate() (user *User, err map[string]string, ok bool) 
 		}
 
 		err["status"] = msg
+		ok = false
+		return
+	}
+
+	if !user.VerifyPassword(form.Password) {
+		ok = false
+		err["email_password"] = "your email or password is incorrect"
 		ok = false
 		return
 	}

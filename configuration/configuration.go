@@ -62,7 +62,7 @@ type Configuration struct {
 		SessionKeys []string `yaml:"session_keys,omitempty"`
 
 		// Secure, is this HTTP connection secure? proxy or directly
-		Secure bool `yaml:"secure",omitempty`
+		Secure bool `yaml:"secure,omitempty"`
 
 		// TLS instructs the http server to listen with a TLS configuration.
 		// This only support simple tls configuration with a cert and key.

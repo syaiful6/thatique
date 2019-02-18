@@ -42,10 +42,25 @@ var configStruct = Configuration{
 		Prefix       string        `yaml:"prefix,omitempty"`
 		Secret       string        `yaml:"secret,omitempty"`
 		SessionKeys  []string      `yaml:"session_keys,omitempty"`
+		Secure       bool          `yaml:"secure,omitempty"`
+		TLS struct {
+			Certificate string `yaml:"certificate,omitempty"`
+			Key string `yaml:"key,omitempty"`
+			ClientCAs []string `yaml:"clientcas,omitempty"`
+			MinimumTLS string `yaml:"minimumtls,omitempty"`
+		} `yaml:"tls,omitempty"`
 		DrainTimeout time.Duration `yaml:"draintimeout,omitempty"`
 		Headers      http.Header   `yaml:"headers,omitempty"`
 	}{
 		Addr: "localhost",
+		TLS: struct {
+			Certificate string `yaml:"certificate,omitempty"`
+			Key string `yaml:"key,omitempty"`
+			ClientCAs []string `yaml:"clientcas,omitempty"`
+			MinimumTLS string `yaml:"minimumtls,omitempty"`
+		}{
+			ClientCAs: []string{"/path/to/ca.pem"},
+		},
 		Headers: http.Header{
 			"X-Content-Type-Options": []string{"nosniff"},
 		},
@@ -87,6 +102,9 @@ reporting:
     apiKey: BugsnagApiKey
 http:
   addr: localhost
+  tls:
+    clientcas:
+      - /path/to/ca.pem
   headers:
     X-Content-Type-Options: [nosniff]
 redis:

@@ -3,7 +3,12 @@ package text
 import (
 	"crypto/rand"
 	"errors"
+	"fmt"
+	"io"
+	"os"
 	"strings"
+	"syscall"
+	"time"
 )
 
 const (
@@ -69,8 +74,43 @@ func RandomString(n int, allowedChars string) (string, error) {
 }
 
 func randomInts(n int) (xs []int, err error) {
-	var size = n * 4
-	var randBytes = make([]byte, size)
+	const (
+		// ensures we backoff for less than 450ms total. Use the following to
+		// select new value, in units of 10ms:
+		// 	n*(n+1)/2 = d -> n^2 + n - 2d -> n = (sqrt(8d + 1) - 1)/2
+		maxretries = 9
+		backoff    = time.Millisecond * 10
+	)
+
+	var (
+		totalBackoff time.Duration
+		count        int
+		retries      int
+		size         = n * 4
+		randBytes    = make([]byte, size)
+	)
+
+	for {
+		b := time.Duration(retries) * backoff
+		time.Sleep(b)
+		totalBackoff += b
+
+		n, err := io.ReadFull(rand.Reader, randBytes[count:])
+		if err != nil {
+			if retryOnError(err) && retries < maxretries {
+				count += n
+				retries++
+				continue
+			}
+
+			// Any other errors represent a system problem. What did someone
+			// do to /dev/urandom?
+			panic(fmt.Errorf("error reading random number generator, retried for %v: %v", totalBackoff.String(), err))
+		}
+
+		break
+	}
+
 	if _, err = rand.Read(randBytes[:]); err != nil {
 		return
 	}
@@ -96,4 +136,19 @@ func getMinimalBitMask(to int) (mask int, err error) {
 		mask = (mask << 1) | 1
 	}
 	return
+}
+
+func retryOnError(err error) bool {
+	switch err := err.(type) {
+	case *os.PathError:
+		return retryOnError(err.Err) // unpack the target error
+	case syscall.Errno:
+		if err == syscall.EPERM {
+			// EPERM represents an entropy pool exhaustion, a condition under
+			// which we backoff and retry.
+			return true
+		}
+	}
+
+	return false
 }
