@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/gomodule/redigo/redis"
-	"github.com/syaiful6/thatique/shop/auth"
 	"github.com/syaiful6/thatique/pkg/text"
+	"github.com/syaiful6/thatique/shop/auth"
 )
 
 // TokenGenerator can create and check a token to be used in passwords resets
@@ -33,7 +33,7 @@ type RedisToken struct {
 }
 
 type RedisTokenGenerator struct {
-	Pool	  *redis.Pool
+	Pool      *redis.Pool
 	Expire    int
 	keyPrefix string
 }
@@ -58,8 +58,8 @@ var insertScript = redis.NewScript(2, `
 
 func NewRedisTokenGenerator(pool *redis.Pool) *RedisTokenGenerator {
 	return &RedisTokenGenerator{
-		Pool: pool,
-		Expire: 86400, // one day
+		Pool:      pool,
+		Expire:    86400, // one day
 		keyPrefix: "token:generator:",
 	}
 }
@@ -82,9 +82,9 @@ func (t *RedisTokenGenerator) Generate(user *auth.User) (token string, err error
 	}
 
 	tok := &RedisToken{
-		Token: token,
-		Email: user.Email,
-		Pass: user.Password,
+		Token:     token,
+		Email:     user.Email,
+		Pass:      user.Password,
 		CreatedAt: time.Now().UTC().Unix(),
 	}
 
@@ -127,7 +127,7 @@ func (t *RedisTokenGenerator) IsValid(user *auth.User, token string) bool {
 		return false
 	}
 
-	data, err := redis.Values(conn.Do("HGETALL", t.keyPrefix + user.Id.Hex()))
+	data, err := redis.Values(conn.Do("HGETALL", t.keyPrefix+user.Id.Hex()))
 	if err != nil {
 		return false
 	}

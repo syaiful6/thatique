@@ -36,28 +36,28 @@ var configStruct = Configuration{
 	},
 
 	HTTP: struct {
-		Addr         string        `yaml:"addr,omitempty"`
-		Net          string        `yaml:"net,omitempty"`
-		Host         string        `yaml:"host,omitempty"`
-		Prefix       string        `yaml:"prefix,omitempty"`
-		Secret       string        `yaml:"secret,omitempty"`
-		SessionKeys  []string      `yaml:"session_keys,omitempty"`
-		Secure       bool          `yaml:"secure,omitempty"`
-		TLS struct {
-			Certificate string `yaml:"certificate,omitempty"`
-			Key string `yaml:"key,omitempty"`
-			ClientCAs []string `yaml:"clientcas,omitempty"`
-			MinimumTLS string `yaml:"minimumtls,omitempty"`
+		Addr        string   `yaml:"addr,omitempty"`
+		Net         string   `yaml:"net,omitempty"`
+		Host        string   `yaml:"host,omitempty"`
+		Prefix      string   `yaml:"prefix,omitempty"`
+		Secret      string   `yaml:"secret,omitempty"`
+		SessionKeys []string `yaml:"session_keys,omitempty"`
+		Secure      bool     `yaml:"secure,omitempty"`
+		TLS         struct {
+			Certificate string   `yaml:"certificate,omitempty"`
+			Key         string   `yaml:"key,omitempty"`
+			ClientCAs   []string `yaml:"clientcas,omitempty"`
+			MinimumTLS  string   `yaml:"minimumtls,omitempty"`
 		} `yaml:"tls,omitempty"`
 		DrainTimeout time.Duration `yaml:"draintimeout,omitempty"`
 		Headers      http.Header   `yaml:"headers,omitempty"`
 	}{
 		Addr: "localhost",
 		TLS: struct {
-			Certificate string `yaml:"certificate,omitempty"`
-			Key string `yaml:"key,omitempty"`
-			ClientCAs []string `yaml:"clientcas,omitempty"`
-			MinimumTLS string `yaml:"minimumtls,omitempty"`
+			Certificate string   `yaml:"certificate,omitempty"`
+			Key         string   `yaml:"key,omitempty"`
+			ClientCAs   []string `yaml:"clientcas,omitempty"`
+			MinimumTLS  string   `yaml:"minimumtls,omitempty"`
 		}{
 			ClientCAs: []string{"/path/to/ca.pem"},
 		},

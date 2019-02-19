@@ -40,12 +40,10 @@ type App struct {
 	context.Context
 	*renderer
 
-	Config        *configuration.Configuration
-	asset         func(string) ([]byte, error)
-	authenticator *auth.Authenticator
-	router        *mux.Router
-	redis         *redis.Pool
-	mongo         *db.MongoConn
+	Config *configuration.Configuration
+	asset  func(string) ([]byte, error)
+	router *mux.Router
+	redis  *redis.Pool
 }
 
 func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *configuration.Configuration) (*App, error) {
@@ -55,11 +53,10 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 	}
 
 	// connect to mongodb
-	mongodb, err := db.Dial(config.MongoDB.URI, config.MongoDB.Name)
+	err = db.Connect(config.MongoDB.URI, config.MongoDB.Name)
 	if err != nil {
 		return nil, err
 	}
-
 	sersanstore, err := redistore.NewRediStore(redisPool)
 	if err != nil {
 		return nil, err
@@ -73,17 +70,13 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 	sessionstate.AuthKey = auth.UserSessionKey
 	sessionstate.Options.Secure = config.HTTP.Secure
 
-	userRepo := auth.NewMgoRepository(mongodb)
-	authenticator := auth.NewAuthenticator(userRepo)
 	app := &App{
-		renderer:      newTemplateRenderer(asset),
-		Config:        config,
-		Context:       ctx,
-		asset:         asset,
-		router:        RouterWithPrefix(config.HTTP.Prefix),
-		redis:         redisPool,
-		mongo:         mongodb,
-		authenticator: authenticator,
+		renderer: newTemplateRenderer(asset),
+		Config:   config,
+		Context:  ctx,
+		asset:    asset,
+		router:   RouterWithPrefix(config.HTTP.Prefix),
+		redis:    redisPool,
 	}
 
 	app.configureSecret(config)
@@ -98,7 +91,7 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 		Predicate: isNotApiRoute,
 		Middlewares: []mux.MiddlewareFunc{
 			sersan.SessionMiddleware(sessionstate),
-			authenticator.Middleware,
+			auth.GlobalAuth.Middleware,
 			csrf.Protect([]byte(config.HTTP.Secret), csrf.Secure(config.HTTP.Secure)),
 		},
 	}
@@ -109,7 +102,7 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 
 	// auth
 	authRouter := app.router.PathPrefix("/auth").Subrouter()
-	authRouter.Handle("", app.dispatch(NewSigninLimitDispatcher(userRepo, 5, 3))).Name("auth.signin")
+	authRouter.Handle("", app.dispatch(NewSigninLimitDispatcher(5, 3))).Name("auth.signin")
 	authRouter.Handle("/logout", app.dispatchFunc(signoutDispatcher)).Name("auth.signout")
 
 	app.router.PathPrefix("/static/").Handler(

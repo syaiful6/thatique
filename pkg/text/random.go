@@ -86,6 +86,7 @@ func randomInts(n int) (xs []int, err error) {
 		totalBackoff time.Duration
 		count        int
 		retries      int
+		x            int
 		size         = n * 4
 		randBytes    = make([]byte, size)
 	)
@@ -111,10 +112,6 @@ func randomInts(n int) (xs []int, err error) {
 		break
 	}
 
-	if _, err = rand.Read(randBytes[:]); err != nil {
-		return
-	}
-	var x int
 	for i := 0; i < n; i++ {
 		x = 0
 		for j := 0; j < 4; j++ {

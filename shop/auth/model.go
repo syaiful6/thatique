@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/syaiful6/thatique/pkg/emailparser"
 	"github.com/syaiful6/thatique/pkg/text"
@@ -50,59 +51,21 @@ type Profile struct {
 }
 
 type User struct {
-	Id        bson.ObjectId `bson:"_id,omitempty" json:"id"`
-	Slug      string        `bson:"slug"`
-	Profile   Profile       `bson:"profile" json:"profile,omitempty"`
-	Email     string        `bson:"email" json:"email"`
-	Password  []byte        `bson:"password" json:"-"`
-	Status    UserStatus    `bson:"status" json:"status"`
-	Superuser bool          `bson:"is_superuser" json:"is_superuser"`
-	Staff     bool          `bson:"is_staff" json:"is_staff"`
-	CreatedAt time.Time     `bson:"created_at" json:"created_at"`
+	Id         bson.ObjectId   `bson:"_id,omitempty" json:"id"`
+	Slug       string          `bson:"slug"`
+	Profile    Profile         `bson:"profile" json:"profile,omitempty"`
+	Email      string          `bson:"email" json:"email"`
+	Password   []byte          `bson:"password" json:"-"`
+	Status     UserStatus      `bson:"status" json:"status"`
+	Superuser  bool            `bson:"is_superuser" json:"is_superuser"`
+	Staff      bool            `bson:"is_staff" json:"is_staff"`
+	CreatedAt  time.Time       `bson:"created_at" json:"created_at"`
+	Identities []OAuthProvider `bson:"identities,omitempty" json:"-"`
 }
 
 type OAuthProvider struct {
-	Id   bson.ObjectId `bson:"_id,omitempty"`
-	Name string        `bson:"name"`
-	Key  string        `bson:"key"`
-	User bson.ObjectId `bson:"user"`
-}
-
-type FinderById interface {
-	FindById(bson.ObjectId) (*User, error)
-}
-
-type FinderByEmail interface {
-	FindByEmail(string) (*User, error)
-}
-
-type Repository interface {
-	FinderById
-	FinderByEmail
-}
-
-type MgoRepository struct {
-	conn *db.MongoConn
-}
-
-func NewMgoRepository(conn *db.MongoConn) *MgoRepository {
-	return &MgoRepository{conn: conn}
-}
-
-func (m *MgoRepository) FindById(id bson.ObjectId) (*User, error) {
-	var user *User
-	if err := m.conn.Find(user, bson.M{"_id": id}).One(&user); err != nil {
-		return nil, err
-	}
-	return user, nil
-}
-
-func (m *MgoRepository) FindByEmail(email string) (*User, error) {
-	var user *User
-	if err := m.conn.Find(user, bson.M{"email": email}).One(&user); err != nil {
-		return nil, err
-	}
-	return user, nil
+	Name string `bson:"name"`
+	Key  string `bson:"key"`
 }
 
 func NewUser(email, password string) (*User, error) {
@@ -120,6 +83,13 @@ func NewUser(email, password string) (*User, error) {
 
 func (u *User) CollectionName() string {
 	return "users"
+}
+
+func (u *User) Indexes() []mgo.Index {
+	return []mgo.Index{
+		mgo.Index{Key: []string{"email"}, Unique: true},
+		mgo.Index{Key: []string{"identities.name", "identities.key"}, Unique: true, Sparse: true},
+	}
 }
 
 func (u *User) SortBy() string {
@@ -174,17 +144,6 @@ func (user *User) IsActive() bool {
 	return user.Status == UserStatusActive
 }
 
-func (p *OAuthProvider) CollectionName() string {
-	return "oauth_providers"
-}
-
-func (p *OAuthProvider) Unique() bson.M {
-	if len(p.Id) > 0 {
-		return bson.M{"_id": p.Id}
-	}
-
-	return bson.M{"name": p.Name, "key": p.Key}
-}
-
-func (p *OAuthProvider) Presave() {
+func init() {
+	db.Register(&User{})
 }

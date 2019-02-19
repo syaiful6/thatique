@@ -7,8 +7,14 @@ import (
 	"github.com/globalsign/mgo/bson"
 )
 
+var (
+	Conn   = new(MongoConn)
+	models = []Model{}
+)
+
 type Model interface {
 	CollectionName() string
+	Indexes() []mgo.Index
 }
 
 type OrderedModel interface {
@@ -23,20 +29,52 @@ type Updatable interface {
 }
 
 type MongoConn struct {
-	DBName  string
 	Session *mgo.Session
 	DB      *mgo.Database // default db
 }
 
+func Connect(uri string, db string) error {
+	conn, err := dial(uri, db)
+	if err != nil {
+		return err
+	}
+
+	Conn = conn
+
+	for _, m := range models {
+		err = registerIndexes(m)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func Register(m Model) {
+	models = append(models, m)
+}
+
+func registerIndexes(m Model) error {
+	collection := Conn.DB.C(m.CollectionName())
+	indexes := m.Indexes()
+	for _, index := range indexes {
+		err := collection.EnsureIndex(index)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Session
-func Dial(uri string, db string) (*MongoConn, error) {
+func dial(uri string, db string) (*MongoConn, error) {
 	session, err := mgo.Dial(uri)
 	if err != nil {
 		return nil, err
 	}
 
 	conn := &MongoConn{
-		DBName:  db,
 		Session: session,
 		DB:      session.DB(db),
 	}
@@ -47,9 +85,8 @@ func Dial(uri string, db string) (*MongoConn, error) {
 func (conn *MongoConn) Copy() *MongoConn {
 	sess := conn.Session.Copy()
 	return &MongoConn{
-		DBName:  conn.DBName,
 		Session: sess,
-		DB:      sess.DB(conn.DBName),
+		DB:      sess.DB(conn.DB.Name),
 	}
 }
 

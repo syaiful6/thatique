@@ -15,31 +15,26 @@ import (
 
 type signinLimitDispatcher struct {
 	limiter *RateLimiter
-	repo    auth.FinderByEmail
 }
 
 type signinHandler struct {
 	*Context
-	repo    auth.FinderByEmail
 	limiter *RateLimiter
 }
 
-func NewSigninLimitDispatcher(repo auth.FinderByEmail, n, b int) *signinLimitDispatcher {
+func NewSigninLimitDispatcher(n, b int) *signinLimitDispatcher {
 	return &signinLimitDispatcher{
 		limiter: NewRateLimiter(n, b, httputil.GetSourceIP),
-		repo:    repo,
 	}
 }
 
 func (sd *signinLimitDispatcher) DispatchHTTP(ctx *Context, r *http.Request) http.Handler {
-	authenticator := ctx.App.authenticator
 	// if user already logged in, redirect to homepage
-	if authenticator.User(r) != nil {
+	if auth.GlobalAuth.User(r) != nil {
 		return http.RedirectHandler("/", http.StatusFound)
 	}
 	sgHandler := &signinHandler{
 		Context: ctx,
-		repo:    sd.repo,
 		limiter: sd.limiter,
 	}
 
@@ -112,7 +107,6 @@ func (sg *signinHandler) postSignupForm(w http.ResponseWriter, r *http.Request) 
 	}
 
 	form := &auth.SigninForm{
-		Finder:   sg.repo,
 		Email:    r.FormValue("email"),
 		Password: r.FormValue("password"),
 	}
@@ -132,7 +126,7 @@ func (sg *signinHandler) postSignupForm(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// check success
-	r, err = sg.App.authenticator.Login(user, r)
+	r, err = auth.GlobalAuth.Login(user, r)
 	if err != nil {
 		panic(err)
 	}
