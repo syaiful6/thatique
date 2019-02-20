@@ -115,10 +115,18 @@ func (u *User) Presave() {
 
 	if u.Slug == "" {
 		if u.Profile.Name != "" {
-			u.Slug = db.GenerateSlug(u, u.Profile.Name)
+			slug, err := db.GenerateSlug(u, u.Profile.Name)
+			if err != nil {
+				panic(err)
+			}
+			u.Slug = slug
 		} else {
 			email, _ := emailparser.NewEmail(u.Email)
-			u.Slug = db.GenerateSlug(u, email.Local())
+			slug, err := db.GenerateSlug(u, email.Local())
+			if err != nil {
+				panic(err)
+			}
+			u.Slug = slug
 		}
 	}
 

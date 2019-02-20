@@ -75,9 +75,8 @@ func registerIndexes(m Model) error {
 	return nil
 }
 
-func GenerateSlug(m Slugable, base) (string, error) {
+func GenerateSlug(m Slugable, base string) (string, error) {
 	var (
-		slugTryCount = 0
 		slug 		 = text.Slugify(base)
 		collection   = Conn.DB.C(m.CollectionName())
 		maxretries   = 20
@@ -88,6 +87,9 @@ func GenerateSlug(m Slugable, base) (string, error) {
 	slugToTry := slug
 	for {
 		count, err = collection.Find(m.SlugQuery(slugToTry)).Count()
+		if err != nil {
+			return "", err
+		}
 		if count == 0 {
 			return slugToTry, nil
 		}

@@ -1,6 +1,9 @@
 package redistoken
 
 import (
+	"time"
+	"crypto/subtle"
+
 	"github.com/gomodule/redigo/redis"
 	"github.com/syaiful6/thatique/pkg/text"
 	"github.com/syaiful6/thatique/shop/auth"
@@ -40,7 +43,7 @@ var insertScript = redis.NewScript(2, `
 func NewRedisTokenGenerator(pool *redis.Pool) *RedisTokenGenerator {
 	return &RedisTokenGenerator{
 		Pool:      pool,
-		Expire:    86400, // one day
+		Expire:    7200, // one day
 		keyPrefix: "token:generator:",
 	}
 }

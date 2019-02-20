@@ -1,11 +1,6 @@
 package passwords
 
 import (
-	"crypto/subtle"
-	"time"
-
-	"github.com/gomodule/redigo/redis"
-	"github.com/syaiful6/thatique/pkg/text"
 	"github.com/syaiful6/thatique/shop/auth"
 )
 
