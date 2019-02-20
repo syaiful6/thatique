@@ -1,10 +1,12 @@
 package db
 
 import (
+	"fmt"
 	"context"
 
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
+	"github.com/syaiful6/thatique/pkg/text"
 )
 
 var (
@@ -15,6 +17,12 @@ var (
 type Model interface {
 	CollectionName() string
 	Indexes() []mgo.Index
+}
+
+type Slugable interface {
+	Model
+	// This is used to generate slug
+	SlugQuery(slug string) bson.M
 }
 
 type OrderedModel interface {
@@ -65,6 +73,30 @@ func registerIndexes(m Model) error {
 		}
 	}
 	return nil
+}
+
+func GenerateSlug(m Slugable, base) (string, error) {
+	var (
+		slugTryCount = 0
+		slug 		 = text.Slugify(base)
+		collection   = Conn.DB.C(m.CollectionName())
+		maxretries   = 20
+		retries int
+		count int
+		err error
+	)
+	slugToTry := slug
+	for {
+		count, err = collection.Find(m.SlugQuery(slugToTry)).Count()
+		if count == 0 {
+			return slugToTry, nil
+		}
+		retries += 1
+		if retries > maxretries {
+			return "", fmt.Errorf("generateslug: maximum retries reached. max: %d", maxretries)
+		}
+		slugToTry = fmt.Sprintf("%s-%d", slug, retries)
+	}
 }
 
 // Session

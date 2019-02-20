@@ -8,7 +8,6 @@ import (
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/syaiful6/thatique/pkg/emailparser"
-	"github.com/syaiful6/thatique/pkg/text"
 	"github.com/syaiful6/thatique/shop/db"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -87,8 +86,9 @@ func (u *User) CollectionName() string {
 
 func (u *User) Indexes() []mgo.Index {
 	return []mgo.Index{
-		mgo.Index{Key: []string{"email"}, Unique: true},
-		mgo.Index{Key: []string{"identities.name", "identities.key"}, Unique: true, Sparse: true},
+		mgo.Index{Key: []string{"email"}, Unique: true,},
+		mgo.Index{Key: []string{"slug"}, Unique: true,},
+		mgo.Index{Key: []string{"identities.name", "identities.key"}, Unique: true, Sparse: true,},
 	}
 }
 
@@ -104,6 +104,10 @@ func (u *User) Unique() bson.M {
 	return bson.M{"email": u.Email}
 }
 
+func (u *User) SlugQuery(slug string) bson.M {
+	return bson.M{"slug": slug,}
+}
+
 func (u *User) Presave() {
 	if u.CreatedAt.IsZero() {
 		u.CreatedAt = time.Now().UTC()
@@ -111,10 +115,10 @@ func (u *User) Presave() {
 
 	if u.Slug == "" {
 		if u.Profile.Name != "" {
-			u.Slug = text.Slugify(u.Profile.Name)
+			u.Slug = db.GenerateSlug(u, u.Profile.Name)
 		} else {
 			email, _ := emailparser.NewEmail(u.Email)
-			u.Slug = text.Slugify(email.Local())
+			u.Slug = db.GenerateSlug(u, email.Local())
 		}
 	}
 

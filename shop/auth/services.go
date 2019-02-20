@@ -23,6 +23,14 @@ func FindUserByEmail(email string) (*User, error) {
 	return user, nil
 }
 
+func FindUserBySlug(slug string) (*User, error) {
+	var user *User
+	if err := db.Conn.Find(user, bson.M{"slug": slug}).One(&user); err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
 // Add the user if one doesn't exist for this identity and set the data for
 // that provider for the user whether the user is new or not.
 func FindOrCreateUserForProvider(user *User, provider OAuthProvider) (*User, bool, error) {
@@ -37,7 +45,9 @@ func FindOrCreateUserForProvider(user *User, provider OAuthProvider) (*User, boo
 	var userData *User
 	*userData = *user
 	user.Identities = []OAuthProvider{provider}
-	info, err := db.Conn.Cursor(user).Upsert(
+
+	userData.Presave()
+	info, err := db.Conn.Cursor(userData).Upsert(
 		query,
 		bson.M{
 			"$setOnInsert": userData,
