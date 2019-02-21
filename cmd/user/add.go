@@ -58,7 +58,7 @@ Flags:
 			return
 		}
 
-		err = db.Connect(config.MongoDB.URI, config.MongoDB.Name)
+		conn, err := db.Dial(config.MongoDB.URI, config.MongoDB.Name)
 		if err != nil {
 			fmt.Fprint(os.Stderr, "can't connect to mongodb server provided in configuration file")
 			return
@@ -74,7 +74,7 @@ Flags:
 		if Superuser {
 			user.Staff = true
 		}
-		if db.Conn.Exists(user) {
+		if conn.Exists(user) {
 			fmt.Fprintf(os.Stderr, "User with email %s already exists", email)
 			return
 		}
@@ -104,7 +104,7 @@ Flags:
 			return
 		}
 
-		_, err = db.Conn.Upsert(user)
+		_, err = conn.Upsert(user)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "failed inserting user document to mongodb with error: %v \n", err)
 			return

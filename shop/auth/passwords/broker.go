@@ -23,6 +23,7 @@ const (
 
 type PasswordBroker struct {
 	ResetURL string
+	Finder   auth.UserFinder
 	token    TokenGenerator
 	notifier Notifier
 }
@@ -108,7 +109,7 @@ func (b *PasswordBroker) ValidateReset(uid string, token string) (req *ResetRequ
 		return
 	}
 
-	user, err := auth.FindUserById(objectid)
+	user, err := b.Finder.FindUserById(objectid)
 	if err != nil {
 		ok = false
 		return

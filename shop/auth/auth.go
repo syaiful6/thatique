@@ -19,10 +19,6 @@ const (
 	UserIdKey = "auth.user.id"
 )
 
-var (
-	GlobalAuth = &Authenticator{}
-)
-
 func WithUser(ctx context.Context, user *User) context.Context {
 	return userInfoContext{
 		Context: ctx,
@@ -48,6 +44,11 @@ func (uic userInfoContext) Value(key interface{}) interface{} {
 
 // authenticator for the web
 type Authenticator struct {
+	finder UserFinder
+}
+
+func NewAuntenticator(finder UserFinder) *Authenticator {
+	return &Authenticator{finder: finder,}
 }
 
 // Middleware that load user from session and set it current user if success
@@ -141,7 +142,7 @@ func (a *Authenticator) getUserFromSession(r *http.Request) *User {
 		return nil
 	}
 
-	user, err := FindUserById(bson.ObjectIdHex(uid))
+	user, err := a.finder.FindUserById(bson.ObjectIdHex(uid))
 	if err != nil {
 		return nil
 	}

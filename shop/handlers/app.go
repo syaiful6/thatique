@@ -21,6 +21,7 @@ import (
 	"github.com/syaiful6/thatique/configuration"
 	scontext "github.com/syaiful6/thatique/context"
 	"github.com/syaiful6/thatique/shop/auth"
+	"github.com/syaiful6/thatique/shop/auth/mongostore"
 	"github.com/syaiful6/thatique/shop/db"
 	"github.com/syaiful6/thatique/shop/middlewares"
 	tredis "github.com/syaiful6/thatique/shop/redis"
@@ -41,6 +42,7 @@ type App struct {
 	*renderer
 
 	Config *configuration.Configuration
+	Auth   *auth.Authenticator
 	asset  func(string) ([]byte, error)
 	router *mux.Router
 	redis  *redis.Pool
@@ -53,10 +55,11 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 	}
 
 	// connect to mongodb
-	err = db.Connect(config.MongoDB.URI, config.MongoDB.Name)
+	conn, err := db.Dial(config.MongoDB.URI, config.MongoDB.Name)
 	if err != nil {
 		return nil, err
 	}
+
 	sersanstore, err := redistore.NewRediStore(redisPool)
 	if err != nil {
 		return nil, err
@@ -70,9 +73,12 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 	sessionstate.AuthKey = auth.UserSessionKey
 	sessionstate.Options.Secure = config.HTTP.Secure
 
+	authstore := mongostore.NewMongoStore(conn)
+
 	app := &App{
 		renderer: newTemplateRenderer(asset),
 		Config:   config,
+		Auth:     auth.NewAuntenticator(authstore),
 		Context:  ctx,
 		asset:    asset,
 		router:   RouterWithPrefix(config.HTTP.Prefix),
@@ -91,7 +97,7 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 		Predicate: isNotApiRoute,
 		Middlewares: []mux.MiddlewareFunc{
 			sersan.SessionMiddleware(sessionstate),
-			auth.GlobalAuth.Middleware,
+			app.Auth.Middleware,
 			csrf.Protect([]byte(config.HTTP.Secret), csrf.Secure(config.HTTP.Secure)),
 		},
 	}
@@ -102,7 +108,7 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 
 	// auth
 	authRouter := app.router.PathPrefix("/auth").Subrouter()
-	authRouter.Handle("", app.dispatch(NewSigninLimitDispatcher(5, 3))).Name("auth.signin")
+	authRouter.Handle("", app.dispatch(NewSigninLimitDispatcher(authstore, 5, 3))).Name("auth.signin")
 	authRouter.Handle("/logout", app.dispatchFunc(signoutDispatcher)).Name("auth.signout")
 
 	app.router.PathPrefix("/static/").Handler(

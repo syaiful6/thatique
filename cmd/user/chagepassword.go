@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
 	"github.com/spf13/cobra"
 	"github.com/syaiful6/thatique/configuration"
 	"github.com/syaiful6/thatique/shop/auth"
@@ -27,13 +28,14 @@ password workflow.`,
 			return
 		}
 
-		err = db.Connect(config.MongoDB.URI, config.MongoDB.Name)
+		conn, err := db.Dial(config.MongoDB.URI, config.MongoDB.Name)
 		if err != nil {
 			fmt.Fprint(os.Stderr, "can't connect to mongodb server provided in configuration file")
 			return
 		}
 
-		user, err := auth.FindUserByEmail(email)
+		var user *auth.User
+		err = conn.Find(user, bson.M{"email": email,}).One(&user)
 		if err != nil {
 			if err == mgo.ErrNotFound {
 				fmt.Fprintf(os.Stderr, "there are no user with %s email", email)
@@ -62,7 +64,7 @@ password workflow.`,
 			return
 		}
 
-		_, err = db.Conn.Upsert(user)
+		_, err = conn.Upsert(user)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "failed updating user document to mongodb with error: %v \n", err)
 			return

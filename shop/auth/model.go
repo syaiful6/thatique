@@ -67,6 +67,11 @@ type OAuthProvider struct {
 	Key  string `bson:"key"`
 }
 
+type UserFinder interface {
+	FindUserById(id bson.ObjectId) (*User, error)
+	FindUserByEmail(email string) (*User, error)
+}
+
 func NewUser(email, password string) (*User, error) {
 	user := &User{
 		Email:     email,
@@ -108,21 +113,21 @@ func (u *User) SlugQuery(slug string) bson.M {
 	return bson.M{"slug": slug,}
 }
 
-func (u *User) Presave() {
+func (u *User) Presave(conn *db.MongoConn) {
 	if u.CreatedAt.IsZero() {
 		u.CreatedAt = time.Now().UTC()
 	}
 
 	if u.Slug == "" {
 		if u.Profile.Name != "" {
-			slug, err := db.GenerateSlug(u, u.Profile.Name)
+			slug, err := conn.GenerateSlug(u, u.Profile.Name)
 			if err != nil {
 				panic(err)
 			}
 			u.Slug = slug
 		} else {
 			email, _ := emailparser.NewEmail(u.Email)
-			slug, err := db.GenerateSlug(u, email.Local())
+			slug, err := conn.GenerateSlug(u, email.Local())
 			if err != nil {
 				panic(err)
 			}

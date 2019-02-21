@@ -6,7 +6,6 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/syaiful6/thatique/pkg/httputil"
-	"github.com/syaiful6/thatique/shop/auth"
 )
 
 type signoutHandler struct {
@@ -15,7 +14,7 @@ type signoutHandler struct {
 
 func signoutDispatcher(ctx *Context, r *http.Request) http.Handler {
 	// user not logged in
-	if auth.GlobalAuth.User(r) == nil {
+	if ctx.App.Auth.User(r) == nil {
 		return http.RedirectHandler("/", http.StatusFound)
 	}
 
@@ -28,7 +27,7 @@ func signoutDispatcher(ctx *Context, r *http.Request) http.Handler {
 }
 
 func (sg *signoutHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	r, err := auth.GlobalAuth.Logout(r)
+	r, err := sg.Context.Auth.Logout(r)
 	if err != nil {
 		sg.App.handleErrorHTML(w, err)
 		return

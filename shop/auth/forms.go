@@ -8,6 +8,7 @@ import (
 
 // SigninForm represent signin form inputs that user submit
 type SigninForm struct {
+	Finder   UserFinder
 	Email    string
 	Password string
 }
@@ -19,7 +20,7 @@ func (form *SigninForm) Validate() (user *User, err map[string]string, ok bool) 
 		return
 	}
 
-	user, verr := FindUserByEmail(form.Email)
+	user, verr := form.Finder.FindUserByEmail(form.Email)
 	if verr != nil {
 		ok = false
 		err["email_password"] = "your email or password is incorrect"

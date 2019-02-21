@@ -6,7 +6,6 @@ import (
 	"github.com/gorilla/handlers"
 
 	"github.com/syaiful6/thatique/context"
-	"github.com/syaiful6/thatique/shop/auth"
 )
 
 type homepageHandler struct {
@@ -32,7 +31,7 @@ func (h *homepageHandler) getHomepage(w http.ResponseWriter, r *http.Request) {
 		h.App.handleErrorHTML(w, err)
 		return
 	}
-	user := auth.GlobalAuth.User(r)
+	user := h.Context.Auth.User(r)
 	if err = tpl.Execute(w, map[string]interface{}{
 		"Title":       "Thatiq",
 		"Description": "Executive",
