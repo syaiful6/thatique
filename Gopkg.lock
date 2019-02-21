@@ -67,6 +67,25 @@
   version = "v0.3.4"
 
 [[projects]]
+  digest = "1:90f6e3a87e2647608b03bd474a485af2dffadcf3c7108d39f01b6f46e8aafec8"
+  name = "github.com/emersion/go-message"
+  packages = [
+    ".",
+    "charset",
+  ]
+  pruneopts = "UT"
+  revision = "f7e2be8074d097a816a1f5bd9d502adc46275d4a"
+  version = "v0.9.1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:47fffd6812689e229e8072737578af99cad0b17707cc07c36344c63bb6b797f1"
+  name = "github.com/emersion/go-textwrapper"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "d0e65e56babe3f687ff94c1d764ca0e6aa7723ee"
+
+[[projects]]
   branch = "master"
   digest = "1:78102ee4d536347316bc42e818340cc50902e45dbd7fdd524c5a1fc0cb07b588"
   name = "github.com/globalsign/mgo"
@@ -390,6 +409,25 @@
   revision = "aca44879d5644da7c5b8ec6a1115e9b6ea6c40d9"
 
 [[projects]]
+  digest = "1:8eae63fdad880f0a261f473523e0f66b9be0361360d9d42c7b499227070ff5af"
+  name = "golang.org/x/text"
+  packages = [
+    "encoding",
+    "encoding/charmap",
+    "encoding/internal",
+    "encoding/internal/identifier",
+    "encoding/japanese",
+    "encoding/simplifiedchinese",
+    "encoding/traditionalchinese",
+    "internal/gen",
+    "transform",
+    "unicode/cldr",
+  ]
+  pruneopts = "UT"
+  revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
+  version = "v0.3.0"
+
+[[projects]]
   branch = "master"
   digest = "1:9fdc2b55e8e0fafe4b41884091e51e77344f7dc511c5acedcfd98200003bff90"
   name = "golang.org/x/time"
@@ -456,6 +494,7 @@
   input-imports = [
     "github.com/bshuster-repo/logrus-logstash-hook",
     "github.com/bugsnag/bugsnag-go",
+    "github.com/emersion/go-message",
     "github.com/globalsign/mgo",
     "github.com/globalsign/mgo/bson",
     "github.com/gomodule/redigo/redis",

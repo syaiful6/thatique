@@ -48,7 +48,7 @@ type Authenticator struct {
 }
 
 func NewAuntenticator(finder UserFinder) *Authenticator {
-	return &Authenticator{finder: finder,}
+	return &Authenticator{finder: finder}
 }
 
 // Middleware that load user from session and set it current user if success

@@ -38,7 +38,7 @@ func (sd *signinLimitDispatcher) DispatchHTTP(ctx *Context, r *http.Request) htt
 	}
 	sgHandler := &signinHandler{
 		Context: ctx,
-		finder: sd.finder,
+		finder:  sd.finder,
 		limiter: sd.limiter,
 	}
 

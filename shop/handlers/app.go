@@ -41,11 +41,12 @@ type App struct {
 	context.Context
 	*renderer
 
-	Config *configuration.Configuration
-	Auth   *auth.Authenticator
-	asset  func(string) ([]byte, error)
-	router *mux.Router
-	redis  *redis.Pool
+	Config    *configuration.Configuration
+	Auth      *auth.Authenticator
+	asset     func(string) ([]byte, error)
+	router    *mux.Router
+	redis     *redis.Pool
+	mongoConn *db.MongoConn
 }
 
 func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *configuration.Configuration) (*App, error) {
@@ -76,13 +77,14 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 	authstore := mongostore.NewMongoStore(conn)
 
 	app := &App{
-		renderer: newTemplateRenderer(asset),
-		Config:   config,
-		Auth:     auth.NewAuntenticator(authstore),
-		Context:  ctx,
-		asset:    asset,
-		router:   RouterWithPrefix(config.HTTP.Prefix),
-		redis:    redisPool,
+		renderer:  newTemplateRenderer(asset),
+		Config:    config,
+		Auth:      auth.NewAuntenticator(authstore),
+		Context:   ctx,
+		asset:     asset,
+		router:    RouterWithPrefix(config.HTTP.Prefix),
+		redis:     redisPool,
+		mongoConn: conn,
 	}
 
 	app.configureSecret(config)

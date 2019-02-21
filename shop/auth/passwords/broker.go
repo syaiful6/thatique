@@ -2,8 +2,8 @@ package passwords
 
 import (
 	"bytes"
-	"fmt"
 	"encoding/base64"
+	"fmt"
 	"text/template"
 	"time"
 
@@ -29,7 +29,7 @@ type PasswordBroker struct {
 }
 
 type ResetRequest struct {
-	user *auth.User
+	user                        *auth.User
 	token, Password1, Password2 string
 }
 
@@ -61,8 +61,8 @@ func (b *PasswordBroker) SendResetLink(ip string, user *auth.User) error {
 	t := template.Must(template.New("reset").Parse(resetMessage))
 	var buf *bytes.Buffer
 	if err = t.Execute(buf, map[string]interface{}{
-		"Link": link,
-		"Email": user.Email,
+		"Link":      link,
+		"Email":     user.Email,
 		"CreatedAt": time.Now().UTC().Format(time.RFC1123),
 	}); err != nil {
 		return err

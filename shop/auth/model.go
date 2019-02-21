@@ -91,9 +91,9 @@ func (u *User) CollectionName() string {
 
 func (u *User) Indexes() []mgo.Index {
 	return []mgo.Index{
-		mgo.Index{Key: []string{"email"}, Unique: true,},
-		mgo.Index{Key: []string{"slug"}, Unique: true,},
-		mgo.Index{Key: []string{"identities.name", "identities.key"}, Unique: true, Sparse: true,},
+		mgo.Index{Key: []string{"email"}, Unique: true},
+		mgo.Index{Key: []string{"slug"}, Unique: true},
+		mgo.Index{Key: []string{"identities.name", "identities.key"}, Unique: true, Sparse: true},
 	}
 }
 
@@ -110,7 +110,7 @@ func (u *User) Unique() bson.M {
 }
 
 func (u *User) SlugQuery(slug string) bson.M {
-	return bson.M{"slug": slug,}
+	return bson.M{"slug": slug}
 }
 
 func (u *User) Presave(conn *db.MongoConn) {

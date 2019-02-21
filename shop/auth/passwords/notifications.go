@@ -1,8 +1,8 @@
 package passwords
 
 import (
-	"io"
 	"github.com/syaiful6/thatique/shop/auth"
+	"io"
 )
 
 type Notifier interface {

@@ -1,8 +1,8 @@
 package db
 
 import (
-	"fmt"
 	"context"
+	"fmt"
 
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
@@ -114,12 +114,12 @@ func (conn *MongoConn) Upsert(u Updatable) (info *mgo.ChangeInfo, err error) {
 
 func (conn *MongoConn) GenerateSlug(m Slugable, base string) (string, error) {
 	var (
-		slug 		 = text.Slugify(base)
-		collection   = conn.DB.C(m.CollectionName())
-		maxretries   = 20
-		retries int
-		count int
-		err error
+		slug       = text.Slugify(base)
+		collection = conn.DB.C(m.CollectionName())
+		maxretries = 20
+		retries    int
+		count      int
+		err        error
 	)
 	slugToTry := slug
 	for {

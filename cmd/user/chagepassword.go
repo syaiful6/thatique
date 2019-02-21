@@ -35,7 +35,7 @@ password workflow.`,
 		}
 
 		var user *auth.User
-		err = conn.Find(user, bson.M{"email": email,}).One(&user)
+		err = conn.Find(user, bson.M{"email": email}).One(&user)
 		if err != nil {
 			if err == mgo.ErrNotFound {
 				fmt.Fprintf(os.Stderr, "there are no user with %s email", email)

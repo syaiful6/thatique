@@ -1,8 +1,8 @@
 package redistoken
 
 import (
-	"time"
 	"crypto/subtle"
+	"time"
 
 	"github.com/gomodule/redigo/redis"
 	"github.com/syaiful6/thatique/pkg/text"

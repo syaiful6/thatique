@@ -11,7 +11,7 @@ type MongoStore struct {
 }
 
 func NewMongoStore(conn *db.MongoConn) *MongoStore {
-	return &MongoStore{c: conn,}
+	return &MongoStore{c: conn}
 }
 
 func (s *MongoStore) FindUserById(id bson.ObjectId) (user *auth.User, err error) {
