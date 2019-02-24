@@ -16,7 +16,7 @@ type visitor struct {
 }
 
 type RateLimiter struct {
-	limit    rate.Limit
+	limit    time.Duration
 	burst    int
 	visitors map[string]*visitor
 	lock     sync.Mutex
@@ -30,7 +30,7 @@ func ipVisitorKeyFunc(r *http.Request) string {
 
 func NewRateLimiter(n, b int, fn VisitorKeyFunc) *RateLimiter {
 	rl := &RateLimiter{
-		limit:   rate.Every(time.Minute * time.Duration(n)),
+		limit:   time.Minute * time.Duration(n),
 		burst:   b,
 		keyFunc: fn,
 		done:    make(chan bool, 1),
@@ -64,7 +64,7 @@ func (rl *RateLimiter) Get(r *http.Request) *rate.Limiter {
 }
 
 func (rl *RateLimiter) add(key string) *rate.Limiter {
-	limiter := rate.NewLimiter(rl.limit, rl.burst)
+	limiter := rate.NewLimiter(rate.Every(rl.limit), rl.burst)
 	rl.lock.Lock()
 	defer rl.lock.Unlock()
 
@@ -74,7 +74,7 @@ func (rl *RateLimiter) add(key string) *rate.Limiter {
 }
 
 func (rl *RateLimiter) cleanup() {
-	ticker := time.NewTicker(5 * time.Minute)
+	ticker := time.NewTicker(2 * rl.limit)
 	defer func() {
 		ticker.Stop()
 	}()
@@ -96,7 +96,7 @@ func (rl *RateLimiter) cleanup() {
 				rl.visitors = make(map[string]*visitor)
 			}
 			for key, v := range rl.visitors {
-				if time.Now().Sub(v.lastSeen) > 10*time.Minute {
+				if time.Now().Sub(v.lastSeen) > 10*rl.limit {
 					delete(rl.visitors, key)
 				}
 			}

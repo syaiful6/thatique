@@ -16,3 +16,6 @@ node_modules
 assets/assets.go
 assets/static/css
 assets/static/js
+
+# data
+docker/data/users

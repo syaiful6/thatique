@@ -3,13 +3,17 @@ package passwords
 import (
 	"bytes"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"text/template"
 	"time"
 
 	"github.com/globalsign/mgo/bson"
+	"github.com/syaiful6/thatique/pkg/emailparser"
 	"github.com/syaiful6/thatique/shop/auth"
 )
+
+var ErrInvalidEmail = errors.New("passwords: invalid email")
 
 type ErrorCode int
 
@@ -17,9 +21,24 @@ const (
 	NoError ErrorCode = iota
 	ErrPassNotMatch
 	ErrMinimumStaffPassLen
-	ErrMinimPassword
+	ErrMinimumPassword
 	ErrUpstream
 )
+
+func (code ErrorCode) ErrorDescription() string {
+	switch code {
+	case NoError:
+		return "No Error"
+	case ErrPassNotMatch:
+		return "password and password confirmation not match"
+	case ErrMinimumStaffPassLen:
+		return "minimum password length for staff user is 15 chars"
+	case ErrMinimumPassword:
+		return "minimum password length is 8 chars"
+	default:
+		return "unknown error"
+	}
+}
 
 type PasswordBroker struct {
 	ResetURL string
@@ -28,9 +47,17 @@ type PasswordBroker struct {
 	notifier Notifier
 }
 
+func NewPasswordBroker(token TokenGenerator, notifier Notifier) *PasswordBroker {
+	return &PasswordBroker{token: token, notifier: notifier}
+}
+
 type ResetRequest struct {
 	user                        *auth.User
 	token, Password1, Password2 string
+}
+
+func (r *ResetRequest) GetUser() *auth.User {
+	return r.user
 }
 
 const resetMessage = `
@@ -50,7 +77,16 @@ IP: {{ .IP }}
 Dibuat: {{ .CreatedAt }}
 `
 
-func (b *PasswordBroker) SendResetLink(ip string, user *auth.User) error {
+func (b *PasswordBroker) SendResetLink(ip string, email string) error {
+	if !emailparser.IsValidEmail(email) {
+		return ErrInvalidEmail
+	}
+
+	user, err := b.Finder.FindUserByEmail(email)
+	if err != nil {
+		return err
+	}
+
 	token, err := b.token.Generate(user)
 	if err != nil {
 		return err
@@ -59,11 +95,12 @@ func (b *PasswordBroker) SendResetLink(ip string, user *auth.User) error {
 	link := fmt.Sprintf("%s/%s/%s", b.ResetURL, uid, token)
 
 	t := template.Must(template.New("reset").Parse(resetMessage))
-	var buf *bytes.Buffer
-	if err = t.Execute(buf, map[string]interface{}{
+	var buf bytes.Buffer
+	if err = t.Execute(&buf, map[string]interface{}{
 		"Link":      link,
 		"Email":     user.Email,
 		"CreatedAt": time.Now().UTC().Format(time.RFC1123),
+		"IP":        ip,
 	}); err != nil {
 		return err
 	}
@@ -81,7 +118,7 @@ func (b *PasswordBroker) Resets(req *ResetRequest, fn func(user *auth.User, pswd
 	}
 
 	if len(req.Password1) < 8 {
-		return ErrMinimPassword
+		return ErrMinimumPassword
 	}
 
 	err := fn(req.user, req.Password1)
@@ -115,7 +152,7 @@ func (b *PasswordBroker) ValidateReset(uid string, token string) (req *ResetRequ
 		return
 	}
 
-	req.user = user
+	req = &ResetRequest{user: user,}
 
 	ok = b.token.IsValid(user, token)
 	if !ok {

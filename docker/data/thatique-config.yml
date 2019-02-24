@@ -1,4 +1,5 @@
 version: 0.1
+data_path: /data
 log:
   level: debug
   fields:
@@ -8,10 +9,15 @@ reporting:
     apiKey: "99153094f8fbc48d175b9097f329ded6"
 http:
   addr: 0.0.0.0:8034
+  host: https://dev.thatiq.com
   secret: "(b7JmIC9!d++U?H8Yf^:[JF=+L|wtxIzHnZ4i_U.9N$iIp|Zm0"
   session_keys:
     - "base64:I/MPHcNDgztf2EVbGYF5G+aZ8IgUFFOGUFWlROqfp/k="
     - "base64:Qs758eGDkgM5XUsaivvab78T80wtoVX8kl1RRSQG7l4="
+mail:
+  smtp:
+    addr: "mail:1025"
+  from: Syaiful Bahri <syai.bahri6@gmail.com>
 mongodb:
   uri: mongodb://mongodb:secret@db:27017
   name: thatiq-db

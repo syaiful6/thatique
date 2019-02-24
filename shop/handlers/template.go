@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"net/http"
 	"html/template"
 	"path"
 	"path/filepath"
@@ -15,6 +16,18 @@ type renderer struct {
 
 func newTemplateRenderer(asset func(string) ([]byte, error)) *renderer {
 	return &renderer{asset: asset, cachedTemplate: make(map[string]*template.Template)}
+}
+
+func (rd *renderer) templateHandler(ctx interface{}, name string, base string, tpls ...string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		tpl, err := rd.Template(name, base, tpls...)
+		if err != nil {
+			panic(err)
+		}
+		if err = tpl.Execute(w, ctx); err != nil {
+			panic(err)
+		}
+	})
 }
 
 func (r *renderer) Template(name string, base string, tpls ...string) (tpl *template.Template, err error) {

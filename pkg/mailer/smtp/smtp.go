@@ -35,6 +35,9 @@ func NewSMTPTransport(option *Options) *SMTPTransport {
 }
 
 func (t *SMTPTransport) Open() error {
+	t.locker.Lock()
+	defer t.locker.Unlock()
+
 	if t.conn != nil {
 		return nil
 	}
@@ -74,6 +77,9 @@ func (t *SMTPTransport) Open() error {
 }
 
 func (t *SMTPTransport) Close() error {
+	t.locker.Lock()
+	defer t.locker.Unlock()
+
 	if t.conn == nil {
 		return nil
 	}
@@ -83,9 +89,9 @@ func (t *SMTPTransport) Close() error {
 	return err
 }
 
-func (t *SMTPTransport) SendMessages(messages []*message.Entity) int {
+func (t *SMTPTransport) SendMessages(messages []*message.Entity) (int, error) {
 	if len(messages) == 0 {
-		return 0
+		return 0, nil
 	}
 
 	t.locker.Lock()
@@ -93,28 +99,33 @@ func (t *SMTPTransport) SendMessages(messages []*message.Entity) int {
 
 	var (
 		numsent int
+		err     error
 		sent    bool
 	)
 
 	// fail silently?
 	if t.conn == nil {
-		return 0
+		return numsent, errors.New("mailer.smtp: connection not opened.")
 	}
 
 	for _, msg := range messages {
-		sent = t.sendMessage(msg)
+		sent, err = t.sendMessage(msg)
+		if err != nil {
+			return numsent, err
+		}
 		if sent {
 			numsent += 1
 		}
 	}
 
-	return numsent
+	return numsent, nil
 }
 
-func (t *SMTPTransport) sendMessage(msg *message.Entity) bool {
+func (t *SMTPTransport) sendMessage(msg *message.Entity) (bool, error) {
 	var (
 		headerPrefix string
 		fromAddrStr  string
+		err          error
 		addressList  []*mail.Address
 	)
 	resent := msg.Header.Get("Resent-Date")
@@ -130,7 +141,7 @@ func (t *SMTPTransport) sendMessage(msg *message.Entity) bool {
 
 	fromAddrs, err := mail.ParseAddressList(fromAddrStr)
 	if err != nil || len(fromAddrs) == 0 {
-		return false
+		return false, nil
 	}
 
 	var toAddrs []*mail.Address
@@ -147,32 +158,28 @@ func (t *SMTPTransport) sendMessage(msg *message.Entity) bool {
 	}
 
 	if len(toAddrs) == 0 {
-		return false
+		return false, nil
 	}
 
-	defer func() {
-		t.conn.Reset()
-	}()
-
 	if err = t.conn.Mail(fromAddrs[0].Address); err != nil {
-		return false
+		return false, err
 	}
 
 	for _, addr := range toAddrs {
 		if err = t.conn.Rcpt(addr.Address); err != nil {
-			return false
+			return false, err
 		}
 	}
 
 	w, err := t.conn.Data()
 	if err != nil {
-		return false
+		return false, err
 	}
 	msg.WriteTo(w)
 	err = w.Close()
 	if err != nil {
-		return false
+		return false, err
 	}
 
-	return true
+	return true, nil
 }

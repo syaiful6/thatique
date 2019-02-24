@@ -13,6 +13,8 @@ import (
 type Configuration struct {
 	Version Version `yaml:"version"`
 
+	DataPath string `yaml:"data_path"`
+
 	// Log supports setting various parameters related to the logging
 	// subsystem.
 	Log struct {
@@ -127,7 +129,7 @@ type LogHook struct {
 type Mail struct {
 	SMTP struct {
 		// Addr defines smtp host address
-		Addr string `yaml:addr,omitempty`
+		Addr string `yaml:"addr,omitempty"`
 
 		// Username defines user name to smtp host
 		Username string `yaml:"username,omitempty"`
@@ -137,9 +139,9 @@ type Mail struct {
 
 		// Insecure defines if smtp login skips the secure certification.
 		Insecure bool `yaml:"insecure,omitempty"`
-	}
+	} `yaml:"smtp,omitempty"`
 
-	From string `yaml:from,omitempty`
+	From string `yaml:"from,omitempty"`
 
 	// To defines mail receiving address
 	To []string `yaml:"to,omitempty"`

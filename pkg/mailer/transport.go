@@ -1,6 +1,9 @@
 package mailer
 
 import (
+	"net/mail"
+	"strings"
+
 	"github.com/emersion/go-message"
 )
 
@@ -20,5 +23,14 @@ type Transport interface {
 	// Send one or more message.Entity objects and return the number of email
 	// messages sent. Before calling this method, you need to make sure to call
 	// Open, otherwise most implementation might choose to always return 0.
-	SendMessages(messages []*message.Entity) int
+	SendMessages(messages []*message.Entity) (int, error)
+}
+
+func FormatAddressList(xs []*mail.Address) string {
+	formatted := make([]string, len(xs))
+	for i, a := range xs {
+		formatted[i] = a.String()
+	}
+
+	return strings.Join(formatted, ", ")
 }

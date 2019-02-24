@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"net/smtp"
 	"strings"
 	"time"
 
@@ -20,6 +21,9 @@ import (
 
 	"github.com/syaiful6/thatique/configuration"
 	scontext "github.com/syaiful6/thatique/context"
+	"github.com/syaiful6/thatique/pkg/mailer"
+	smtptransport "github.com/syaiful6/thatique/pkg/mailer/smtp"
+	"github.com/syaiful6/thatique/pkg/queue"
 	"github.com/syaiful6/thatique/shop/auth"
 	"github.com/syaiful6/thatique/shop/auth/mongostore"
 	"github.com/syaiful6/thatique/shop/db"
@@ -41,12 +45,14 @@ type App struct {
 	context.Context
 	*renderer
 
-	Config    *configuration.Configuration
-	Auth      *auth.Authenticator
-	asset     func(string) ([]byte, error)
-	router    *mux.Router
-	redis     *redis.Pool
-	mongoConn *db.MongoConn
+	Config        *configuration.Configuration
+	Auth          *auth.Authenticator
+	asset         func(string) ([]byte, error)
+	router        *mux.Router
+	redis         *redis.Pool
+	mongoConn     *db.MongoConn
+	jobQueue      chan queue.Job
+	mailTransport mailer.Transport
 }
 
 func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *configuration.Configuration) (*App, error) {
@@ -77,14 +83,16 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 	authstore := mongostore.NewMongoStore(conn)
 
 	app := &App{
-		renderer:  newTemplateRenderer(asset),
-		Config:    config,
-		Auth:      auth.NewAuntenticator(authstore),
-		Context:   ctx,
-		asset:     asset,
-		router:    RouterWithPrefix(config.HTTP.Prefix),
-		redis:     redisPool,
-		mongoConn: conn,
+		renderer:      newTemplateRenderer(asset),
+		Config:        config,
+		Auth:          auth.NewAuntenticator(authstore),
+		Context:       ctx,
+		asset:         asset,
+		router:        RouterWithPrefix(config.HTTP.Prefix),
+		redis:         redisPool,
+		mongoConn:     conn,
+		jobQueue:      setupJobQueue(5, 100),
+		mailTransport: setupSMTPTransport(config),
 	}
 
 	app.configureSecret(config)
@@ -109,9 +117,21 @@ func NewApp(ctx context.Context, asset func(string) ([]byte, error), config *con
 	app.router.Handle("/", app.dispatchFunc(homepageDispatcher)).Name("home")
 
 	// auth
+	pswdDispatcher, err := NewPasswordHTTPDispatcher(app, authstore)
+	if err != nil {
+		return nil, err
+	}
+
+	queue.Loggerf = scontext.GetLogger(ctx).Infof
+
 	authRouter := app.router.PathPrefix("/auth").Subrouter()
 	authRouter.Handle("", app.dispatch(NewSigninLimitDispatcher(authstore, 5, 3))).Name("auth.signin")
 	authRouter.Handle("/logout", app.dispatchFunc(signoutDispatcher)).Name("auth.signout")
+	authRouter.Handle("/passwords", app.dispatchFunc(pswdDispatcher.dispatchResetLink)).Name("passwords.resets_link")
+	authRouter.Handle(
+		"/passwords/{uid}/{token}",
+		app.dispatchFunc(pswdDispatcher.dispatchResetPassword),
+	).Name("passwords.change")
 
 	app.router.PathPrefix("/static/").Handler(
 		http.StripPrefix("/static/", http.FileServer(&StaticFs{asset: asset, prefix: "assets/static"})))
@@ -258,6 +278,14 @@ func (app *App) handleErrorHTML(w http.ResponseWriter, err error) {
 	w.Write(b)
 }
 
+func setupJobQueue(maxWorker, maxQueueSize int) chan queue.Job {
+	jobQueue := make(chan queue.Job, maxQueueSize)
+	dispatcher := queue.NewDispatcher(jobQueue, maxWorker)
+	dispatcher.Run()
+
+	return jobQueue
+}
+
 func createSecretKeys(keyPairs ...string) [][]byte {
 	xs := make([][]byte, len(keyPairs))
 	var (
@@ -280,4 +308,24 @@ func createSecretKeys(keyPairs ...string) [][]byte {
 
 func isNotApiRoute(r *http.Request) bool {
 	return !strings.HasPrefix(r.URL.Path, "/api")
+}
+
+func setupSMTPTransport(c *configuration.Configuration) mailer.Transport {
+	mailConfig := c.Mail
+	var (
+		addr string
+	)
+
+	if mailConfig.SMTP.Addr != "" {
+		addr = mailConfig.SMTP.Addr
+	}
+
+	options := &smtptransport.Options{
+		Addr: addr,
+	}
+	if mailConfig.SMTP.Username != "" && mailConfig.SMTP.Password != "" {
+		options.Auth = smtp.CRAMMD5Auth(mailConfig.SMTP.Username, mailConfig.SMTP.Password)
+	}
+
+	return smtptransport.NewSMTPTransport(options)
 }

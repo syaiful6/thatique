@@ -1,6 +1,7 @@
 package passwords
 
 import (
+	"github.com/syaiful6/thatique/pkg/text"
 	"github.com/syaiful6/thatique/shop/auth"
 )
 
@@ -18,4 +19,10 @@ type TokenGenerator interface {
 
 	// IsValid check that a password reset token is valid
 	IsValid(user *auth.User, token string) bool
+}
+
+const TokenAllowedChars = text.ASCII_LOWERCASE + text.ASCII_UPPERCASE + text.DIGITS + "-_~"
+
+func GenerateToken() (string, error) {
+	return text.RandomString(32, TokenAllowedChars)
 }

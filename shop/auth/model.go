@@ -72,6 +72,15 @@ type UserFinder interface {
 	FindUserByEmail(email string) (*User, error)
 }
 
+type UserSaver interface {
+	Save(*User) error
+}
+
+type UserRepository interface {
+	UserFinder
+	UserSaver
+}
+
 func NewUser(email, password string) (*User, error) {
 	user := &User{
 		Email:     email,

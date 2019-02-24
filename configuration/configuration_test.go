@@ -15,7 +15,8 @@ import (
 func Test(t *testing.T) { TestingT(t) }
 
 var configStruct = Configuration{
-	Version: "0.1",
+	Version:  "0.1",
+	DataPath: "/data",
 	Log: struct {
 		AccessLog struct {
 			Disabled bool `yaml:"disabled,omitempty"`
@@ -93,6 +94,7 @@ var configStruct = Configuration{
 // configYamlV0_1 is a Version 0.1 yaml document representing configStruct
 var configYamlV0_1 = `
 version: 0.1
+data_path: /data
 log:
   level: info
   fields:

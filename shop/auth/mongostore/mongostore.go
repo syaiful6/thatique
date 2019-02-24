@@ -14,6 +14,11 @@ func NewMongoStore(conn *db.MongoConn) *MongoStore {
 	return &MongoStore{c: conn}
 }
 
+func (s *MongoStore) Save(user *auth.User) error {
+	_, err := s.c.Upsert(user)
+	return err
+}
+
 func (s *MongoStore) FindUserById(id bson.ObjectId) (user *auth.User, err error) {
 	err = s.c.C(user).FindId(id).One(&user)
 	return

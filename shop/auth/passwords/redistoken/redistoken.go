@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/gomodule/redigo/redis"
-	"github.com/syaiful6/thatique/pkg/text"
 	"github.com/syaiful6/thatique/shop/auth"
+	"github.com/syaiful6/thatique/shop/auth/passwords"
 )
 
 type RedisToken struct {
@@ -21,8 +21,6 @@ type RedisTokenGenerator struct {
 	Expire    int
 	keyPrefix string
 }
-
-const tokenAllowedChars = text.ASCII_LOWERCASE + text.ASCII_UPPERCASE + text.DIGITS + "-_~"
 
 var insertScript = redis.NewScript(2, `
 	local tokens = {}
@@ -43,7 +41,7 @@ var insertScript = redis.NewScript(2, `
 func NewRedisTokenGenerator(pool *redis.Pool) *RedisTokenGenerator {
 	return &RedisTokenGenerator{
 		Pool:      pool,
-		Expire:    7200, // one day
+		Expire:    7200, // two hours
 		keyPrefix: "token:generator:",
 	}
 }
@@ -60,7 +58,7 @@ func (t *RedisTokenGenerator) Generate(user *auth.User) (token string, err error
 		return "", err
 	}
 
-	token, err = text.RandomString(32, tokenAllowedChars)
+	token, err = passwords.GenerateToken()
 	if err != nil {
 		return "", err
 	}
