@@ -1,0 +1,120 @@
+swagger: '2.0'
+info:
+  version: '1.0.0'
+  title: Sample Access Code Flow OAuth2 Project
+  description: This is an example of using OAuth2 Access Code Flow in a specification to describe security to your API.
+securityDefinitions:
+  accessCode:
+    type: oauth2
+    # This should be updated to the Token URL of your OAuth provider.
+    tokenUrl: http://example.com/oauth/token
+    # This should be updated to the Authorization URL of your OAuth provider.
+    authorizationUrl: http://example.com/oauth/auth
+    flow: accessCode
+    scopes:
+      read: allows reading resources
+      write: allow writing resource
+      manage_private: access, write, edit private resource (email, contact, direct message etc)
+security:
+  - accessCode:
+    - read
+schemes:
+  - https
+definitions:
+  ErrorResponse:
+    type: object
+    properties:
+      message:
+        type: string
+        description: the error message
+  User:
+    type: object
+    properties:
+      id:
+        type: string
+        description: The unique id of user
+      email:
+        type: string
+        description: user's email
+      status:
+        type: string
+        description: user status, either active, inactive or locked
+      created_at:
+        type: string
+        format: date-time
+      profile:
+        type: object
+        properties:
+          name:
+            type: string
+            description: The name of user
+          picture:
+            type: string
+            description: Public URL of user's profile
+          bio:
+            type: string
+            description: 'biography of user, this field maybe empty'
+          web:
+            type: string
+            description: User's web URL
+paths:
+  /users:
+    get:
+      summary: List users
+      description: |
+        Return a list of users
+      operationId: "UserLists"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "limit"
+          in: "query"
+          description:  "Number of objects to return."
+          type: "integer"
+          format: "int32"
+        - name: "offset"
+          in: "query"
+          description: "Zero-based offset from default object sorting."
+          type: "integer"
+          format: "int32"
+      responses:
+        '200':
+          description: "no errors"
+          schema:
+            type: object
+            properties:
+              users:
+                type: array
+                items:
+                  $ref: '#/definitions/User'
+        '500':
+          description: "internal server errors"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  "/users/{id}":
+    get:
+      summary: detail user
+      description: get information about user
+      produces:
+        - "application/json"
+      parameters:
+        - name: "id"
+          in: "path"
+          type: "string"
+          required: true
+      responses:
+        '200':
+          description: "no error"
+          schema:
+            type: object
+            properties:
+              user:
+                $ref: '#/definitions/User'
+        '404':
+          description: "not found error"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: "internal server errors"
+          schema:
+            $ref: '#/definitions/ErrorResponse'
