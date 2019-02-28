@@ -4,9 +4,9 @@ build-assets:
 	$(NPM_BIN)/node-sass web/static/sass/application.scss assets/static/css/application.css \
 		&& $(NPM_BIN)/postcss assets/static/css/application.css -o assets/static/css/application.css \
 			--config web
-	go-bindata -o assets/assets.go -pkg assets assets/...
 
 build: build-assets
+	go-bindata -o assets/assets.go -pkg assets assets/...
 	go build
 
 clean:

@@ -1,18 +1,44 @@
 /* Color
 /* ------------------------------------------- */
-$blue: #48B7C7;
-$red: #FF6559;
-$green: #4DDD66;
+$blue: #0567C0;
+$red: #E4898B;
+$green: #74BA70;
 $orange: #FFA959;
 $yellow: #FFCB59;
-$dark-grey: #464F54;
-$mid-grey: #A2ADBD;
-$light-grey: #F0F3F7;
+$dark-grey: #060C08;
+$mid-grey: #BAAC9F;
+$light-grey: #EFEED9;
 $white: #fff;
+$calm-grey: #E6B38A;
 
+/* Typography
+/* -------------------------------------------- */
 $font-family: "Fira Sans", sans-serif;
 $font-family-mono: Consolas, "Liberation Mono", Menlo, Courier, monospace;
 
 $body-bg: $white;
 
 $border-radius: 4px;
+
+/* Layout and Grid
+/* -------------------------------------------- */
+$layout-screen-size-threshold: 1024px;
+
+$grid-desktop-columns: 12 !default;
+$grid-desktop-gutter: 1.6rem !default;
+$grid-desktop-margin: 1.6rem !default;
+
+$grid-desktop-breakpoint: 840px !default;
+
+$grid-tablet-columns: 8 !default;
+$grid-tablet-gutter: $grid-desktop-gutter !default;
+$grid-tablet-margin: $grid-desktop-margin !default;
+
+$grid-tablet-breakpoint: 480px !default;
+
+$grid-phone-columns: 4 !default;
+$grid-phone-gutter: $grid-desktop-gutter !default;
+$grid-phone-margin: $grid-desktop-margin !default;
+
+$grid-cell-default-columns: $grid-phone-columns !default;
+$grid-max-columns: $grid-desktop-columns !default;

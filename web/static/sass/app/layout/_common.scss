@@ -1,6 +1,18 @@
+.sh-wrapper {
+  position: absolute;
+  min-height: 100%;
+  width: 100%;
+}
+
 .sh-viewport {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
   position: relative;
-  min-height:100%;
+  -webkit-overflow-scrolling: touch;
 }
 
 .inner {
@@ -11,23 +23,18 @@
 
 .sh-head {
   position: relative;
-  z-index: 900;
-  margin-bottom: 40px;
+  z-index: 3;
+  margin-bottom: 40rem;
   padding: 0 4vw;
   width: 100%;
   border-bottom: 1px solid $light-grey;
   background:hsla(0, 0%, 100%, .97);
 
-  @media (max-width:600px) {
-    padding-right:15px;
-    padding-left:15px;
-  }
-
   .sh-navbar {
     -ms-flex-pack: justify;
     justify-content: space-between;
-    height:55px;
-    font-size:13px;
+    height: 5.5rem;
+    font-size: 1.3rem;
   }
 
   .sh-navbar,
@@ -41,19 +48,19 @@
     flex-shrink: 0;
     display: flex!important;
     align-items: center;
-    margin-left: -12px;
+    margin-left: -1.2rem;
     color:$mid-grey;
 
     .thatiq-svg {
       width: auto;
-      height: 25px
+      height: 2.5rem;
     }
   }
 
   .sh-nav-logo-suffix {
     position: relative;
-    margin: 0 0 0 12px;
-    padding: 0 0 0 11px;
+    margin: 0 0 0 1.2rem;
+    padding: 0 0 0 1.1rem;
     font-size: 1.6rem;
     font-weight: 400;
     text-shadow: none;
@@ -66,7 +73,7 @@
       left: 0;
       display: block;
       width: 1px;
-      height: 23px;
+      height: 2.3rem;
       background: lighten($mid-grey, 4%);
       transform: rotate(25deg);
     }
@@ -83,7 +90,7 @@
     -ms-flex-negative: 0;
     flex-shrink: 0;
     display: block;
-    padding: 10px 12px;
+    padding: 1rem 1.2rem;
     color: $mid-grey;
     font-weight: 500;
     text-decoration: none;
@@ -96,42 +103,46 @@
     &:hover .sh-nav-logo-suffix {
       color: inherit;
     }
+
+    @media (max-width: 600px) {
+      display: none;
+    }
   }
 
   .sh-more-drop {
     svg {
       margin-left: 3px;
-      width: 7px;
+      width: 0.7rem;
       height: auto
     }
 
-    .sh-dropdown{
-      right:-73px;
-      width:146px;
-      font-size:1.2rem;
-      text-shadow:none
+    .sh-dropdown {
+      right:-7.3rem;
+      width: 14.6rem;
+      font-size: 1.2rem;
+      text-shadow: none;
+
+      &:after {
+        right: 6.6rem;
+      }
+
+      &:after {
+        right: 6.4rem;
+      }
     }
 
-    .sh-dropdown:after{
-      right: 66px
-    }
-
-    .sh-dropdown:before {
-      right: 64px
-    }
-
-    .sh-badge{
+    .sh-badge {
       font-size: 1rem
     }
   }
 
   .sh-navbar-btn {
-    margin-left: 10px;
+    margin-left: 1rem;
     color: $mid-grey;
     transition: all .5s ease;
 
     span {
-      padding: 8px 10px;
+      padding: 0.8rem 1rem;
       height: auto;
       line-height: 1;
       text-align: center;
